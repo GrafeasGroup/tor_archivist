@@ -1,29 +1,24 @@
 import logging
-import sys
-import time
 from datetime import datetime
 
-import prawcore
-from praw import Reddit
+from tor_core.config import config
+from tor_core.helpers import css_flair
+from tor_core.helpers import run_until_dead
+from tor_core.helpers import subreddit_from_url
+from tor_core.initialize import build_bot
+from tor_core.strings import reddit_url
 
-from tor.core.config import config
-from tor.core.initialize import configure_logging
-from tor.core.initialize import configure_tor
-from tor.core.initialize import initialize
-from tor.helpers.flair import css_flair
-from tor.helpers.misc import explode_gracefully
-from tor.helpers.misc import subreddit_from_url
-from tor.strings.urls import reddit_url
+from tor_archivist import __version__
 
 
-def run(tor, config, archive):
+def run(config):
     # TODO the bot will now check ALL posts on the subreddit.
     # when we remove old transcription requests, there aren't too many left.
     # but we should make it stop after a certain amount of time anyway
     # eg. if it encounters a post >36 hours old, it will break the loop
 
     # TODO we can use .submissions(end=unixtime) apparently
-    for post in tor.new(limit=1000):
+    for post in config.tor.new(limit=1000):
 
         # [META] - do nothing
         # [UNCLAIMED] - remove
@@ -65,7 +60,7 @@ def run(tor, config, archive):
         # me_irl explosion
         if flair == css_flair.completed:
             logging.info('Archiving completed post "{}"...'.format(post.title))
-            archive.submit(
+            config.archive.submit(
                 post.title,
                 url=reddit_url.format(post.permalink))
             post.mod.remove()
@@ -73,41 +68,16 @@ def run(tor, config, archive):
 
 
 def main():
-    '''
-    Console scripts entry point for Archiver Bot
-    '''
-    r = Reddit('bot_archiver')
-
-    configure_logging(config, log_name='archiver.log')
-
-    tor = configure_tor(r, config)
-    initialize(tor, config)
-    logging.info('Initialization complete.')
-    archive = r.subreddit('ToR_Archive')
-
-    try:
-        while True:
-            try:
-                run(tor, config, archive)
-                time.sleep(300)  # 5 minutes
-            except (
-                    prawcore.exceptions.RequestException,
-                    prawcore.exceptions.ServerError,
-                    prawcore.exceptions.Forbidden
-            ) as e:
-                logging.warning(
-                    '{} - Issue communicating with Reddit. Sleeping for 60s!'
-                    ''.format(e)
-                )
-                time.sleep(60)
-
-    except KeyboardInterrupt:
-        logging.info('Received keyboard interrupt! Shutting down!')
-        sys.exit(0)
-
-    except Exception as e:
-        explode_gracefully('ToR_archivist', e, tor)
-
+    """
+        Console scripts entry point for Archivist Bot
+    """
+    
+    build_bot('bot_archiver',
+              __version__,
+              full_name='u/transcribot',
+              log_name='archiver.log')
+    config.archive = config.r.subreddit('ToR_Archive')
+    run_until_dead(run)
 
 if __name__ == '__main__':
     main()
