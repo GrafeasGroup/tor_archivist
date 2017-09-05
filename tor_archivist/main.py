@@ -13,6 +13,7 @@ from tor_archivist import __version__
 
 
 def run(config):
+    logging.info('Starting archiving of old posts...')
     # TODO the bot will now check ALL posts on the subreddit.
     # when we remove old transcription requests, there aren't too many left.
     # but we should make it stop after a certain amount of time anyway
@@ -67,6 +68,7 @@ def run(config):
             post.mod.remove()
             logging.info('Post archived!')
 
+    logging.info('Finished archiving.')
     sleep(30 * 60)
 
 
