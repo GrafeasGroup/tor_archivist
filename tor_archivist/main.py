@@ -56,14 +56,12 @@ def run(config):
 
             post.mod.remove()
 
-        # always process completed posts so we don't have a repeat of the
-        # me_irl explosion
+        # copy completed posts to archive subreddit
         if flair == css_flair.completed:
             logging.info('Archiving completed post "{}"...'.format(post.title))
             config.archive.submit(
                 post.title,
                 url=reddit_url.format(post.permalink))
-            post.mod.remove()
             logging.info('Post archived!')
 
 
