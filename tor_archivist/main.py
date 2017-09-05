@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from time import sleep
 
 from tor_core.config import config
 from tor_core.helpers import css_flair
@@ -65,6 +66,8 @@ def run(config):
                 url=reddit_url.format(post.permalink))
             post.mod.remove()
             logging.info('Post archived!')
+
+    sleep(30 * 60)
 
 
 def main():
