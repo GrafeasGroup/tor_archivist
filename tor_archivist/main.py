@@ -27,13 +27,13 @@ def run(config):
         # [DISREGARD] - remove
         flair = post.link_flair_css_class
 
-        if flair not in (css_flair.unclaimed, css_flair.completed):
-            continue
-
         # is it a disregard post? Nuke it and move on -- we don't want those
         # sitting around and cluttering up the sub
         if flair == css_flair.disregard:
             post.mod.remove()
+            continue
+
+        if flair not in (css_flair.unclaimed, css_flair.completed):
             continue
 
         # find the original post subreddit
