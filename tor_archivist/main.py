@@ -68,8 +68,8 @@ def run(config):
             post.mod.remove()
             logging.info('Post archived!')
 
-    logging.info('Finished archiving.')
-    sleep(30 * 60)
+    logging.info('Finished archiving - sleeping!')
+    sleep(30 * 60)  # 30 minutes
 
 
 def main():
