@@ -64,9 +64,9 @@ setup(
     ],
     keywords='',
     packages=find_packages(exclude=['test', 'test.*', '*.test.*', '*.test']),
+    zip_safe=True,
     cmdclass={'test': PyTest},
     test_suite='test',
-    zip_safe=True,
     entry_points={
         'console_scripts': [
             'tor-archivist = tor_archivist.main:main',
