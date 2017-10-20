@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import sys
 import codecs
@@ -35,10 +33,19 @@ def long_description():
         return f.read()
 
 
+test_deps = [
+    'pytest',
+    'pytest-cov',
+]
+dev_helper_deps = [
+    'better-exceptions',
+]
+
+
 setup(
     name='tor_archivist',
     version=__version__,
-    description='',
+    description='The officially licensed archivist for /r/TranscribersOfReddit!',
     long_description=long_description(),
     url='https://github.com/TranscribersOfReddit/ToR_Archivist',
     author='Joe Kaufeld',
@@ -56,29 +63,23 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     keywords='',
-    packages=find_packages(exclude=['test*', 'bin/*']),
+    packages=find_packages(exclude=['test', 'test.*', '*.test.*', '*.test']),
+    cmdclass={'test': PyTest},
     test_suite='test',
+    zip_safe=True,
     entry_points={
         'console_scripts': [
             'tor-archivist = tor_archivist.main:main',
         ],
     },
-    tests_require=[
-        'pytest',
-    ],
-    cmdclass={'test': PyTest},
+    extras_require={
+        'dev': test_deps + dev_helper_deps,
+    },
+    tests_require=test_deps,
     install_requires=[
-        'praw==5.0.1',
-        'redis<3.0.0',
-        'tor_core>=0.2.0,<0.3.0',
-        'addict',
-        'tesserocr',
-        'wget',
-        'sh',
-        'bugsnag',
-        'cython',  # WORKAROUND: 'tesserocr' only sometimes installs this dependency
+        'tor_core',
     ],
     dependency_links=[
-        'git+https://github.com/TranscribersOfReddit/tor_core.git@master#egg=tor_core-0.2.0',
+        'git+https://github.com/TranscribersOfReddit/tor_core.git@master#egg=tor_core-0',
     ],
 )
