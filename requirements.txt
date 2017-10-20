@@ -1,3 +1,0 @@
-git+git://github.com/transcribersofreddit/tor_core.git
-tesserocr
-wget
