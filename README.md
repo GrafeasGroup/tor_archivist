@@ -1,5 +1,7 @@
 [![Stories in Ready](https://badge.waffle.io/TranscribersOfReddit/ToR_Archivist.png?label=ready&title=Ready)](http://waffle.io/TranscribersOfReddit/ToR_Archivist)
 
+[![BugSnag](https://img.shields.io/badge/errors--hosted--by-BugSnag-blue.svg)](https://www.bugsnag.com/open-source/)
+
 # Archiver Bot - Transcribers Of Reddit
 
 The code for TranscribersOfReddit's official licensed archivist!
