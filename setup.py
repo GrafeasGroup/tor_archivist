@@ -36,6 +36,7 @@ def long_description():
 test_deps = [
     'pytest',
     'pytest-cov',
+    'sh',
 ]
 dev_helper_deps = [
     'better-exceptions',
