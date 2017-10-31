@@ -1,0 +1,16 @@
+---
+engines:
+  bandit:
+    enabled: true
+  pylint:
+    enabled: true
+  prospector:
+    enabled: true
+  duplication:
+    enabled: true
+  metrics:
+    enabled: true
+  coverage:
+    enabled: true
+exclude_paths:
+  - 'test/**/*'
