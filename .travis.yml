@@ -1,0 +1,27 @@
+---
+language: python
+
+dist: trusty
+
+python:
+  - "3.6"
+  - "3.6-dev"
+  - "3.7-dev"
+  - "nightly"
+
+matrix:
+  allow_failures:
+    - python: 3.6-dev
+    - python: 3.7-dev
+    - python: nightly
+
+install:
+  - pip install --process-dependency-links .[dev]
+  - pip install codacy-coverage
+
+script:
+  - pytest --cov=tor_archivist
+
+after_success:
+  - coverage xml
+  - python-codacy-coverage -r coverage.xml

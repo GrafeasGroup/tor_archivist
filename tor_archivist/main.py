@@ -76,13 +76,14 @@ def main():
     """
         Console scripts entry point for Archivist Bot
     """
-    
+
     build_bot('bot_archiver',
               __version__,
               full_name='u/transcribot',
               log_name='archiver.log')
     config.archive = config.r.subreddit('ToR_Archive')
     run_until_dead(run)
+
 
 if __name__ == '__main__':
     main()
