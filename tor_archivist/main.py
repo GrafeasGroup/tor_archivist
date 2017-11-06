@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from time import sleep
 
@@ -76,11 +77,10 @@ def main():
     """
         Console scripts entry point for Archivist Bot
     """
+    config.debug_mode = bool(os.environ.get('DEBUG_MODE', False))
+    bot_name = 'debug' if config.debug_mode else os.environ.get('BOT_NAME', 'bot_archiver')
 
-    build_bot('bot_archiver',
-              __version__,
-              full_name='u/transcribot',
-              log_name='archiver.log')
+    build_bot(bot_name, __version__, full_name='u/transcribot', log_name='archiver.log')
     config.archive = config.r.subreddit('ToR_Archive')
     run_until_dead(run)
 
