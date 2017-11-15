@@ -48,7 +48,7 @@ setup(
     version=__version__,
     description='The officially licensed archivist for /r/TranscribersOfReddit!',
     long_description=long_description(),
-    url='https://github.com/TranscribersOfReddit/ToR_Archivist',
+    url='https://github.com/GrafeasGroup/tor_archivist',
     author='Joe Kaufeld',
     author_email='joe.kaufeld@gmail.com',
     license='MIT',
@@ -81,6 +81,6 @@ setup(
         'tor_core',
     ],
     dependency_links=[
-        'git+https://github.com/TranscribersOfReddit/tor_core.git@master#egg=tor_core-0',
+        'git+https://github.com/GrafeasGroup/tor_core.git@master#egg=tor_core-0',
     ],
 )
