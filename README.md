@@ -29,7 +29,7 @@ to transcribing images, audio, and video. It acts under the username `/u/ToR_arc
 Make sure you have an [up-to-date copy of pip installed](https://pip.pypa.io/en/stable/installing/) and Python 3.6.
 
 ```
-$ git clone https://github.com/TranscribersOfReddit/ToR_Archivist.git tor_archivist
+$ git clone https://github.com/GrafeasGroup/tor_archivist.git tor_archivist
 $ cd tor_archivist/
 $ pip install --process-dependency-links .
 ```
@@ -37,7 +37,7 @@ $ pip install --process-dependency-links .
 OR
 
 ```
-$ pip install --process-dependency-links 'git+https://github.com/TranscribersOfReddit/ToR_Archivist.git@master#egg=tor_archivist-0'
+$ pip install --process-dependency-links 'git+https://github.com/GrafeasGroup/tor_archivist.git@master#egg=tor_archivist-0'
 ```
 
 ## High-level functionality
