@@ -53,7 +53,8 @@ def run(config):
 
         if seconds > hours * 3600:
             logging.info(
-                f'Post "{post.title}" is older than maximum age of {hours} hours, removing.'
+                f'Post "{post.title}" is older than maximum age of {hours} '
+                f'hours, removing. '
             )
 
             post.mod.remove()
