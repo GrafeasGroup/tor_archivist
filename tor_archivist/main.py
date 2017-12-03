@@ -6,11 +6,28 @@ from time import sleep
 from tor_core.config import config
 from tor_core.helpers import css_flair
 from tor_core.helpers import run_until_dead
-from tor_core.helpers import subreddit_from_url
 from tor_core.initialize import build_bot
 from tor_core.strings import reddit_url
 
 from tor_archivist import __version__
+
+
+def find_transcription(post):
+    """
+    Browse the top level comments of a thread, and return the first one that
+    is a transcription. Currently pretty much a copy of its counterpart in
+    ToR, which should definitely change later on.
+
+    :param post: the thread to look in.
+    :return: the matching comment, or None if it wasn't found.
+    """
+    post.comments.replace_more(limit=0)
+
+    for comment in post.comments.list():
+        if 'www.reddit.com/r/TranscribersOfReddit' in comment.body:
+            return comment
+
+    return None
 
 
 def run(config):
@@ -39,9 +56,12 @@ def run(config):
         if flair not in (css_flair.unclaimed, css_flair.completed):
             continue
 
+        # the original post that might have been transcribed
+        original_post = config.r.get_submission(post.url)
+
         # find the original post subreddit
         # take it in lowercase so the config is case insensitive
-        post_subreddit = subreddit_from_url(post.url).lower()
+        post_subreddit = original_post.subreddit
 
         # hours until a post from this subreddit should be archived
         hours = config.archive_time_subreddits.get(
@@ -63,11 +83,19 @@ def run(config):
         # me_irl explosion
         if flair == css_flair.completed:
             logging.info(f'Archiving completed post "{post.title}"...')
-            config.archive.submit(
-                post.title,
-                url=reddit_url.format(post.permalink))
+
+            # look for the transcription
+            transcript = find_transcription(original_post)
+
+            if transcript is not None:
+                config.archive.submit(
+                    post.title,
+                    url=reddit_url.format(transcript.permalink))
+                logging.info('Post archived!')
+            else:
+                logging.info('Could not find the transcript - won\'t archive.')
+
             post.mod.remove()
-            logging.info('Post archived!')
 
     logging.info('Finished archiving - sleeping!')
     sleep(30 * 60)  # 30 minutes
