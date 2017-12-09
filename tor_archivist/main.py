@@ -17,8 +17,8 @@ thirty_minutes = 1800  # seconds
 
 
 def run(config):
-    if (config.last_run + thirty_minutes) <= time.time():
-        # This is how we sleep for 30 minutes, but still respond to CTRL+C
+    if config.sleep_until <= time.time():
+        # This is how we sleep for longer periods, but still respond to CTRL+C
         # quickly: trigger an event loop every minute during wait time.
         time.sleep(60)
         return
@@ -79,7 +79,7 @@ def run(config):
             logging.info('Post archived!')
 
     logging.info('Finished archiving - sleeping!')
-    config.last_run = time.time()
+    config.sleep_until = time.time() + thirty_minutes
 
 
 def main():
