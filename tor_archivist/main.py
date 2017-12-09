@@ -62,8 +62,8 @@ def run(config):
 
         if seconds > hours * 3600:
             logging.info(
-                'Post "{}" is older than maximum age of {} hours, removing.'.format(
-                    post.title, hours)
+                f'Post "{post.title}" is older than maximum age of {hours} '
+                f'hours, removing. '
             )
 
             post.mod.remove()
@@ -71,7 +71,7 @@ def run(config):
         # always process completed posts so we don't have a repeat of the
         # me_irl explosion
         if flair == css_flair.completed:
-            logging.info('Archiving completed post "{}"...'.format(post.title))
+            logging.info(f'Archiving completed post "{post.title}"...')
             config.archive.submit(
                 post.title,
                 url=reddit_url.format(post.permalink))
