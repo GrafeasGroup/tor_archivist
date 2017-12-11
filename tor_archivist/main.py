@@ -57,7 +57,7 @@ def run(config):
             continue
 
         # the original post that might have been transcribed
-        original_post = config.r.get_submission(post.url)
+        original_post = config.r.submission(url=post.url)
 
         # find the original post subreddit
         # take it in lowercase so the config is case insensitive
