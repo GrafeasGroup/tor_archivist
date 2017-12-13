@@ -91,7 +91,7 @@ def main():
 
     build_bot(bot_name, __version__, full_name='u/transcribot', log_name='archiver.log')
     config.archive = config.r.subreddit('ToR_Archive')
-    config.last_run = 0
+    config.sleep_until = 0
     run_until_dead(run)
 
 
