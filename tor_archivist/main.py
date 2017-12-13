@@ -1,7 +1,7 @@
 import logging
 import os
+import time
 from datetime import datetime
-from time import sleep
 
 from tor_core.config import config
 from tor_core.helpers import css_flair
@@ -13,7 +13,16 @@ from tor_core.strings import reddit_url
 from tor_archivist import __version__
 
 
+thirty_minutes = 1800  # seconds
+
+
 def run(config):
+    if config.sleep_until <= time.time():
+        # This is how we sleep for longer periods, but still respond to CTRL+C
+        # quickly: trigger an event loop every minute during wait time.
+        time.sleep(60)
+        return
+
     logging.info('Starting archiving of old posts...')
     # TODO the bot will now check ALL posts on the subreddit.
     # when we remove old transcription requests, there aren't too many left.
@@ -70,7 +79,7 @@ def run(config):
             logging.info('Post archived!')
 
     logging.info('Finished archiving - sleeping!')
-    sleep(30 * 60)  # 30 minutes
+    config.sleep_until = time.time() + thirty_minutes
 
 
 def main():
@@ -82,6 +91,7 @@ def main():
 
     build_bot(bot_name, __version__, full_name='u/transcribot', log_name='archiver.log')
     config.archive = config.r.subreddit('ToR_Archive')
+    config.last_run = 0
     run_until_dead(run)
 
 
