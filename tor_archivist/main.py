@@ -17,7 +17,7 @@ thirty_minutes = 1800  # seconds
 
 
 def run(config):
-    if config.sleep_until <= time.time():
+    if config.sleep_until >= time.time():
         # This is how we sleep for longer periods, but still respond to CTRL+C
         # quickly: trigger an event loop every minute during wait time.
         time.sleep(60)
