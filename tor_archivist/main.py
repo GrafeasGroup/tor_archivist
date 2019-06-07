@@ -12,16 +12,23 @@ from tor_core.strings import reddit_url
 
 from tor_archivist import __version__
 
+##############################
+CLEAR_THE_QUEUE_MODE = False
+##############################
 
 thirty_minutes = 1800  # seconds
 
 
 def run(config):
-    if config.sleep_until >= time.time():
-        # This is how we sleep for longer periods, but still respond to CTRL+C
-        # quickly: trigger an event loop every minute during wait time.
-        time.sleep(60)
-        return
+    if CLEAR_THE_QUEUE_MODE:
+        pass
+    else:
+        if config.sleep_until >= time.time():
+            # This is how we sleep for longer periods, but still respond to
+            # CTRL+C quickly: trigger an event loop every minute during wait
+            # time.
+            time.sleep(60)
+            return
 
     logging.info('Starting archiving of old posts...')
     # TODO the bot will now check ALL posts on the subreddit.
@@ -60,13 +67,16 @@ def run(config):
         date = datetime.utcfromtimestamp(post.created_utc)
         seconds = int((datetime.utcnow() - date).total_seconds())
 
-        if seconds > hours * 3600:
-            logging.info(
-                f'Post "{post.title}" is older than maximum age of {hours} '
-                f'hours, removing. '
-            )
-
+        if CLEAR_THE_QUEUE_MODE:
             post.mod.remove()
+        else:
+            if seconds > hours * 3600:
+                logging.info(
+                    f'Post "{post.title}" is older than maximum age of {hours} '
+                    f'hours, removing. '
+                )
+
+                post.mod.remove()
 
         # always process completed posts so we don't have a repeat of the
         # me_irl explosion
@@ -79,7 +89,11 @@ def run(config):
             logging.info('Post archived!')
 
     logging.info('Finished archiving - sleeping!')
-    config.sleep_until = time.time() + thirty_minutes
+    if CLEAR_THE_QUEUE_MODE:
+        logging.info('Clear the Queue Mode is engaged! Back we go!')
+        config.sleep_until = time.time()
+    else:
+        config.sleep_until = time.time() + thirty_minutes
 
 
 def main():
