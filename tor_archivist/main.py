@@ -12,14 +12,18 @@ from tor_core.strings import reddit_url
 
 from tor_archivist import __version__
 
+##############################
+CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
+##############################
 
 thirty_minutes = 1800  # seconds
 
 
 def run(config):
-    if config.sleep_until >= time.time():
-        # This is how we sleep for longer periods, but still respond to CTRL+C
-        # quickly: trigger an event loop every minute during wait time.
+    if not CLEAR_THE_QUEUE_MODE and config.sleep_until >= time.time():
+        # This is how we sleep for longer periods, but still respond to
+        # CTRL+C quickly: trigger an event loop every minute during wait
+        # time.
         time.sleep(60)
         return
 
@@ -60,7 +64,9 @@ def run(config):
         date = datetime.utcfromtimestamp(post.created_utc)
         seconds = int((datetime.utcnow() - date).total_seconds())
 
-        if seconds > hours * 3600:
+        if CLEAR_THE_QUEUE_MODE:
+            post.mod.remove()
+        elif seconds > hours * 3600:
             logging.info(
                 f'Post "{post.title}" is older than maximum age of {hours} '
                 f'hours, removing. '
@@ -78,8 +84,11 @@ def run(config):
             post.mod.remove()
             logging.info('Post archived!')
 
-    logging.info('Finished archiving - sleeping!')
-    config.sleep_until = time.time() + thirty_minutes
+    if CLEAR_THE_QUEUE_MODE:
+        logging.info('Clear the Queue Mode is engaged! Back we go!')
+    else:
+        logging.info('Finished archiving - sleeping!')
+        config.sleep_until = time.time() + thirty_minutes
 
 
 def main():
