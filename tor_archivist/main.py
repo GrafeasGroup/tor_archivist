@@ -20,15 +20,12 @@ thirty_minutes = 1800  # seconds
 
 
 def run(config):
-    if CLEAR_THE_QUEUE_MODE:
-        pass
-    else:
-        if config.sleep_until >= time.time():
-            # This is how we sleep for longer periods, but still respond to
-            # CTRL+C quickly: trigger an event loop every minute during wait
-            # time.
-            time.sleep(60)
-            return
+    if not CLEAR_THE_QUEUE_MODE and config.sleep_until >= time.time():
+        # This is how we sleep for longer periods, but still respond to
+        # CTRL+C quickly: trigger an event loop every minute during wait
+        # time.
+        time.sleep(60)
+        return
 
     logging.info('Starting archiving of old posts...')
     # TODO the bot will now check ALL posts on the subreddit.
@@ -69,14 +66,13 @@ def run(config):
 
         if CLEAR_THE_QUEUE_MODE:
             post.mod.remove()
-        else:
-            if seconds > hours * 3600:
-                logging.info(
-                    f'Post "{post.title}" is older than maximum age of {hours} '
-                    f'hours, removing. '
-                )
+        elif seconds > hours * 3600:
+            logging.info(
+                f'Post "{post.title}" is older than maximum age of {hours} '
+                f'hours, removing. '
+            )
 
-                post.mod.remove()
+            post.mod.remove()
 
         # always process completed posts so we don't have a repeat of the
         # me_irl explosion
@@ -88,11 +84,10 @@ def run(config):
             post.mod.remove()
             logging.info('Post archived!')
 
-    logging.info('Finished archiving - sleeping!')
     if CLEAR_THE_QUEUE_MODE:
         logging.info('Clear the Queue Mode is engaged! Back we go!')
-        config.sleep_until = time.time()
     else:
+        logging.info('Finished archiving - sleeping!')
         config.sleep_until = time.time() + thirty_minutes
 
 
