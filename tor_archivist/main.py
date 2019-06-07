@@ -13,7 +13,7 @@ from tor_core.strings import reddit_url
 from tor_archivist import __version__
 
 ##############################
-CLEAR_THE_QUEUE_MODE = False
+CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
 ##############################
 
 thirty_minutes = 1800  # seconds
