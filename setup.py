@@ -8,21 +8,6 @@ from setuptools.command.test import test as TestCommand
 from tor_archivist import __version__
 
 
-class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = ''
-
-    def run_tests(self):
-        import shlex
-        # import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(shlex.split(self.pytest_args))
-        sys.exit(errno)
-
-
 def long_description():
     if not (os.path.isfile('README.rst') and os.access('README.rst', os.R_OK)):
         return ''
@@ -64,8 +49,6 @@ setup(
     keywords='',
     packages=find_packages(exclude=['test', 'test.*', '*.test.*', '*.test']),
     zip_safe=True,
-    cmdclass={'test': PyTest},
-    test_suite='test',
     entry_points={
         'console_scripts': [
             'tor-archivist = tor_archivist.main:main',
