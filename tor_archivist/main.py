@@ -29,7 +29,7 @@ def run(cfg):
         # This is how we sleep for longer periods, but still respond to
         # CTRL+C quickly: trigger an event loop every minute during wait
         # time.
-        time.sleep(60)
+        time.sleep(5)
         return
 
     logging.info('Starting archiving of old posts...')

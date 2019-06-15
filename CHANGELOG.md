@@ -6,6 +6,7 @@ means we will never make a backwards-incompatible change within a major version 
 ## UNRELEASED
 
 - Adds "No Operator (NOOP) mode" for testing infrastructure automation without reaching out externally
+- CTRL-C now responds within 5 seconds
 
 ## [0.3.0] -- 2019-06-15
 
