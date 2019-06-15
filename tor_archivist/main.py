@@ -22,8 +22,8 @@ def noop(cfg):
     logging.info('Loop!')
 
 
-def run(config):
-    if not CLEAR_THE_QUEUE_MODE and config.sleep_until >= time.time():
+def run(cfg):
+    if not CLEAR_THE_QUEUE_MODE and cfg.sleep_until >= time.time():
         # This is how we sleep for longer periods, but still respond to
         # CTRL+C quickly: trigger an event loop every minute during wait
         # time.
@@ -37,7 +37,7 @@ def run(config):
     # eg. if it encounters a post >36 hours old, it will break the loop
 
     # TODO we can use .submissions(end=unixtime) apparently
-    for post in config.tor.new(limit=1000):
+    for post in cfg.tor.new(limit=1000):
 
         # [META] - do nothing
         # [UNCLAIMED] - remove
@@ -60,8 +60,8 @@ def run(config):
         post_subreddit = subreddit_from_url(post.url).lower()
 
         # hours until a post from this subreddit should be archived
-        hours = config.archive_time_subreddits.get(
-            post_subreddit, config.archive_time_default)
+        hours = cfg.archive_time_subreddits.get(
+            post_subreddit, cfg.archive_time_default)
 
         # time since this post was made
         date = datetime.utcfromtimestamp(post.created_utc)
@@ -81,7 +81,7 @@ def run(config):
         # me_irl explosion
         if flair == css_flair.completed:
             logging.info(f'Archiving completed post "{post.title}"...')
-            config.archive.submit(
+            cfg.archive.submit(
                 post.title,
                 url=reddit_url.format(post.permalink))
             post.mod.remove()
@@ -91,13 +91,10 @@ def run(config):
         logging.info('Clear the Queue Mode is engaged! Back we go!')
     else:
         logging.info('Finished archiving - sleeping!')
-        config.sleep_until = time.time() + thirty_minutes
+        cfg.sleep_until = time.time() + thirty_minutes
 
 
 def main():
-    """
-        Console scripts entry point for Archivist Bot
-    """
     config.debug_mode = bool(os.environ.get('DEBUG_MODE', False))
     bot_name = 'debug' if config.debug_mode else os.environ.get('BOT_NAME', 'bot_archiver')
 
