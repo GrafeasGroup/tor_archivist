@@ -17,7 +17,7 @@ CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
 thirty_minutes = 1800  # seconds
 
 
-def debug(cfg):
+def noop(cfg):
     time.sleep(10)
     logging.info('Loop!')
 
@@ -104,8 +104,8 @@ def main():
     build_bot(bot_name, __version__, full_name='u/transcribot')
     config.archive = config.r.subreddit('ToR_Archive')
     config.sleep_until = 0
-    if config.debug_mode:
-        run_until_dead(debug)
+    if os.getenv('NOOP_MODE', False):
+        run_until_dead(noop)
     else:
         run_until_dead(run)
 
