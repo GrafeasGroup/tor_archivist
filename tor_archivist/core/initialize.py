@@ -63,7 +63,7 @@ def configure_redis():
     return redis_server
 
 
-def configure_logging(config, log_name='transcribersofreddit.log'):
+def configure_logging(config):
     logging.basicConfig(
         level=logging.INFO,
         format='%(levelname)s | %(funcName)s | %(message)s',
