@@ -6,6 +6,7 @@ means we will never make a backwards-incompatible change within a major version 
 ## [1.0.0] -- 2019-06-15
 
 - Embeds `tor_core` as `tor_archivist.core`
+- Loop that does nothing when in debug mode
 
 ## [0.2.0]
 

@@ -17,6 +17,11 @@ CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
 thirty_minutes = 1800  # seconds
 
 
+def debug(cfg):
+    time.sleep(10)
+    logging.debug('Loop!')
+
+
 def run(config):
     if not CLEAR_THE_QUEUE_MODE and config.sleep_until >= time.time():
         # This is how we sleep for longer periods, but still respond to
@@ -99,7 +104,10 @@ def main():
     build_bot(bot_name, __version__, full_name='u/transcribot', log_name='archiver.log')
     config.archive = config.r.subreddit('ToR_Archive')
     config.sleep_until = 0
-    run_until_dead(run)
+    if config.debug_mode:
+        run_until_dead(debug)
+    else:
+        run_until_dead(run)
 
 
 if __name__ == '__main__':
