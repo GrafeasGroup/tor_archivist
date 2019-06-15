@@ -1,10 +1,8 @@
+import codecs
 import os
 import sys
-import codecs
-from setuptools import (
-    setup,
-    find_packages,
-)
+
+from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
 from tor_archivist import __version__
@@ -78,9 +76,13 @@ setup(
     },
     tests_require=test_deps,
     install_requires=[
-        'tor_core',
-    ],
-    dependency_links=[
-        'git+https://github.com/GrafeasGroup/tor_core.git@master#egg=tor_core-0',
+        'praw==5.0.1',
+        'redis<3.0.0',
+        'sh',
+        'cherrypy',
+        'bugsnag',
+        'raven',  # Sentry client
+        'requests',
+        'slackclient<2.0.0',
     ],
 )

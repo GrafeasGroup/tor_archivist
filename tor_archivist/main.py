@@ -3,14 +3,12 @@ import os
 import time
 from datetime import datetime
 
-from tor_core.config import config
-from tor_core.helpers import css_flair
-from tor_core.helpers import run_until_dead
-from tor_core.helpers import subreddit_from_url
-from tor_core.initialize import build_bot
-from tor_core.strings import reddit_url
-
 from tor_archivist import __version__
+from tor_archivist.core.config import config
+from tor_archivist.core.helpers import (css_flair, run_until_dead,
+                                        subreddit_from_url)
+from tor_archivist.core.initialize import build_bot
+from tor_archivist.core.strings import reddit_url
 
 ##############################
 CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
