@@ -12,6 +12,8 @@ from tor_archivist.core.strings import reddit_url
 
 ##############################
 CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
+NOOP_MODE = bool(os.getenv('NOOP_MODE', ''))
+DEBUG_MODE = bool(os.getenv('DEBUG_MODE', ''))
 ##############################
 
 thirty_minutes = 1800  # seconds
@@ -95,13 +97,13 @@ def run(cfg):
 
 
 def main():
-    config.debug_mode = bool(os.environ.get('DEBUG_MODE', False))
-    bot_name = 'debug' if config.debug_mode else os.environ.get('BOT_NAME', 'bot_archiver')
+    config.debug_mode = DEBUG_MODE
+    bot_name = 'debug' if config.debug_mode else os.getenv('BOT_NAME', 'bot_archiver')
 
     build_bot(bot_name, __version__, full_name='u/transcribot')
     config.archive = config.r.subreddit('ToR_Archive')
     config.sleep_until = 0
-    if os.getenv('NOOP_MODE', False):
+    if NOOP_MODE:
         run_until_dead(noop)
     else:
         run_until_dead(run)
