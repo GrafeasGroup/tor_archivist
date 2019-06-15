@@ -19,7 +19,7 @@ thirty_minutes = 1800  # seconds
 
 def debug(cfg):
     time.sleep(10)
-    logging.debug('Loop!')
+    logging.info('Loop!')
 
 
 def run(config):

@@ -17,6 +17,14 @@ from tor_archivist.core.heartbeat import configure_heartbeat
 from tor_archivist.core.helpers import clean_list, get_wiki_page, log_header
 
 
+def has_tor_environment_vars():
+    for var in ('username', 'password', 'client_id', 'client_secret', 'user_agent'):
+        if f'praw_{var}' not in os.environ:
+            return False
+
+    return True
+
+
 def configure_tor(config):
     """
     Assembles the tor object based on whether or not we've enabled debug mode
@@ -294,7 +302,10 @@ def build_bot(
     :return: None
     """
 
-    config.r = Reddit(name)
+    if has_tor_environment_vars():
+        config.r = Reddit()
+    else:
+        config.r = Reddit(name)
     # this is used to power messages, so please add a full name if you can
     config.name = full_name if full_name else name
     config.bot_version = version
