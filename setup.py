@@ -1,9 +1,7 @@
 import codecs
 import os
-import sys
 
 from setuptools import find_packages, setup
-from setuptools.command.test import test as TestCommand
 
 from tor_archivist import __version__
 
