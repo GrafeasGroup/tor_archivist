@@ -3,6 +3,10 @@
 We follow [Semantic Versioning](http://semver.org/) as a way of measuring stability of an update. This
 means we will never make a backwards-incompatible change within a major version of the project.
 
+## [0.4.1] -- 2019-06-16
+
+- FIX: unneeded kwargs removed for log file name, but not everywhere
+
 ## [0.4.0] -- 2019-06-16
 
 - Adds "No Operator (NOOP) mode" for testing infrastructure automation without reaching out externally

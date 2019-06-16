@@ -281,7 +281,6 @@ def build_bot(
     name,
     version,
     full_name=None,
-    log_name='transcribersofreddit.log',
     require_redis=True,
     heartbeat_logging=False
 ):
@@ -310,7 +309,7 @@ def build_bot(
     config.name = full_name if full_name else name
     config.bot_version = version
     config.heartbeat_logging = heartbeat_logging
-    configure_logging(config, log_name=log_name)
+    configure_logging(config)
     configure_modchat(config)
 
     if not require_redis:
