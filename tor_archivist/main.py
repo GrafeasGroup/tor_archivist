@@ -5,8 +5,9 @@ from datetime import datetime
 
 from tor_archivist import __version__
 from tor_archivist.core.config import config
-from tor_archivist.core.helpers import (css_flair, run_until_dead,
-                                        subreddit_from_url)
+from tor_archivist.core.helpers import (
+    css_flair, run_until_dead
+)
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.strings import reddit_url
 
@@ -25,13 +26,21 @@ def find_transcription(post):
     is a transcription. Currently pretty much a copy of its counterpart in
     ToR, which should definitely change later on.
 
+    Because we're only processing posts that u/ToR has already accepted as
+    complete, then we don't need to be as firm with the check to verify the
+    transcription.
+
     :param post: the thread to look in.
     :return: the matching comment, or None if it wasn't found.
     """
     post.comments.replace_more(limit=0)
 
     for comment in post.comments.list():
-        if 'www.reddit.com/r/TranscribersOfReddit' in comment.body:
+        if all([
+                _ in comment.body for _ in [
+                    'www.reddit.com/r/TranscribersOfReddit', '&#32;'
+                ]
+        ]):
             return comment
 
     return None
@@ -108,18 +117,14 @@ def run(cfg):
             # look for the transcription
             transcript = find_transcription(original_post)
 
-            # TODO: MERGE THESE
-            # if transcript is not None:
-            #     config.archive.submit(
-            #         post.title,
-            #         url=reddit_url.format(transcript.permalink))
-            #     logging.info('Post archived!')
-            # else:
-            #     logging.info('Could not find the transcript - won\'t archive.')
+            if transcript is not None:
+                cfg.archive.submit(
+                    post.title,
+                    url=reddit_url.format(transcript.permalink))
+                logging.info('Post archived!')
+            else:
+                logging.info('Could not find the transcript - won\'t archive.')
 
-            # cfg.archive.submit(
-            #     post.title,
-            #     url=reddit_url.format(post.permalink))
             post.mod.remove()
 
     if CLEAR_THE_QUEUE_MODE:
