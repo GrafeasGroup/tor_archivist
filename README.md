@@ -32,7 +32,7 @@ $ pip install ./path/to/tor_archivist-1.0.0-linux-x86_64.tar.gz
 
 ### From source
 
-Make sure you have an [up-to-date copy of poetry installed](https://github.com/sdispater/poetry#installation) and at least Python 3.7.
+Make sure you have an [up-to-date copy of poetry installed](https://github.com/sdispater/poetry#installation) and at least Python 3.6.
 
 ```sh
 $ git clone https://github.com/GrafeasGroup/tor_archivist.git tor_archivist
@@ -59,7 +59,7 @@ To build the package from source, start in the base of the repository and run:
 $ poetry build
 ```
 
-When building is complete, upload everything in the `dist/` directory that was just created as part of the GitHub release.
+When building is complete, upload the `.whl` file in the `dist/` directory that was just created as part of the GitHub release.
 
 ## Usage
 
