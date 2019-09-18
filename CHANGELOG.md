@@ -3,16 +3,24 @@
 We follow [Semantic Versioning](http://semver.org/) as a way of measuring stability of an update. This
 means we will never make a backwards-incompatible change within a major version of the project.
 
-## [UNRELEASED]
+## [0.5.0] -- 2019-10-18
 
 - Link to the transcription comment directly in archive posts, rather than to the original post itself.
 
-## v0.2.0 (2017-09-06)
+## [0.4.1] -- 2019-06-16
 
-- Only archive once every 30 minutes
-- No longer remove posts immediately after completion, but instead remove all completed ones every round
-- Fix the removal of "Disregard" posts
+- FIX: unneeded kwargs removed for log file name, but not everywhere
 
-## v0.1.0 (2017-08-21)
+## [0.4.0] -- 2019-06-16
 
-- Initial split from `tor` into one package per bot
+- Adds "No Operator (NOOP) mode" for testing infrastructure automation without reaching out externally
+- CTRL-C now responds within 5 seconds
+
+## [0.3.0] -- 2019-06-15
+
+- Embeds `tor_core` as `tor_archivist.core`
+- Loop that does nothing when in debug mode
+
+## [0.2.0]
+
+- Split from `tor` into one package per bot

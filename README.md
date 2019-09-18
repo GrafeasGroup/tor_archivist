@@ -1,7 +1,3 @@
-[![Waffle.io - Ready](https://img.shields.io/waffle/label/TranscribersOfReddit/TranscribersOfReddit/ready.svg?colorB=yellow&label=Available%20Issues)](https://waffle.io/TranscribersOfReddit/TranscribersOfReddit)
-[![Waffle.io - In Progress](https://img.shields.io/waffle/label/TranscribersOfReddit/TranscribersOfReddit/in%20progress.svg?colorB=green&label=Issues%20Being%20Worked%20On)](https://waffle.io/TranscribersOfReddit/TranscribersOfReddit)
-[![Codacy quality](https://img.shields.io/codacy/grade/978e3984e69f4b00b41fa40f5b947797.svg)](https://www.codacy.com/app/TranscribersOfReddit/ToR_Archivist)
-[![Codacy coverage](https://img.shields.io/codacy/coverage/978e3984e69f4b00b41fa40f5b947797.svg)](https://www.codacy.com/app/TranscribersOfReddit/ToR_Archivist)
 [![Travis build status](https://img.shields.io/travis/TranscribersOfReddit/ToR_Archivist.svg)](https://travis-ci.org/TranscribersOfReddit/ToR_Archivist)
 [![BugSnag](https://img.shields.io/badge/errors--hosted--by-Bugsnag-blue.svg)](https://www.bugsnag.com/open-source/)
 
@@ -26,18 +22,22 @@ to transcribing images, audio, and video. It acts under the username `/u/ToR_arc
 
 ## Installation
 
+### From release
+
+Given a release in <https://github.com/GrafeasGroup/tor_archivist/releases>, download the attached `.tar.gz` file for your platform/architecture and `pip install` it directly like so:
+
+```sh
+$ pip install ./path/to/tor_archivist-1.0.0-linux-x86_64.tar.gz
+```
+
+### From source
+
 Make sure you have an [up-to-date copy of pip installed](https://pip.pypa.io/en/stable/installing/) and Python 3.6.
 
-```
+```sh
 $ git clone https://github.com/GrafeasGroup/tor_archivist.git tor_archivist
 $ cd tor_archivist/
-$ pip install --process-dependency-links .
-```
-
-OR
-
-```
-$ pip install --process-dependency-links 'git+https://github.com/GrafeasGroup/tor_archivist.git@master#egg=tor_archivist-0'
+$ pip install .
 ```
 
 ## High-level functionality
@@ -51,9 +51,19 @@ Monitoring daemon (via [/r/TranscribersOfReddit/new](https://www.reddit.com/r/Tr
       - Link to post in [/r/ToR_Archive](https://www.reddit.com/r/ToR_Archive)
     - Remove the post
 
-## Running Archiver Bot
+## Build
 
+To build the package from source, start in the base of the repository and run:
+
+```sh
+$ python setup.py bdist --format=gztar
 ```
+
+When building is complete, upload everything in the `dist/` directory that was just created as part of the GitHub release.
+
+## Usage
+
+```sh
 $ tor-archivist
 # => [daemon mode + logging]
 ```

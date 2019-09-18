@@ -1,28 +1,9 @@
-import os
-import sys
 import codecs
-from setuptools import (
-    setup,
-    find_packages,
-)
-from setuptools.command.test import test as TestCommand
+import os
+
+from setuptools import find_packages, setup
 
 from tor_archivist import __version__
-
-
-class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = ''
-
-    def run_tests(self):
-        import shlex
-        # import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(shlex.split(self.pytest_args))
-        sys.exit(errno)
 
 
 def long_description():
@@ -66,8 +47,6 @@ setup(
     keywords='',
     packages=find_packages(exclude=['test', 'test.*', '*.test.*', '*.test']),
     zip_safe=True,
-    cmdclass={'test': PyTest},
-    test_suite='test',
     entry_points={
         'console_scripts': [
             'tor-archivist = tor_archivist.main:main',
@@ -78,9 +57,13 @@ setup(
     },
     tests_require=test_deps,
     install_requires=[
-        'tor_core',
-    ],
-    dependency_links=[
-        'git+https://github.com/GrafeasGroup/tor_core.git@master#egg=tor_core-0',
+        'praw==5.0.1',
+        'redis<3.0.0',
+        'sh',
+        'cherrypy',
+        'bugsnag',
+        'raven',  # Sentry client
+        'requests',
+        'slackclient<2.0.0',
     ],
 )
