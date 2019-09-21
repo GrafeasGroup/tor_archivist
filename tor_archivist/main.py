@@ -6,7 +6,7 @@ from datetime import datetime
 from tor_archivist import __version__
 from tor_archivist.core.config import config
 from tor_archivist.core.helpers import (
-    css_flair, run_until_dead
+    css_flair, run_until_dead, subreddit_from_url
 )
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.strings import reddit_url
@@ -78,10 +78,12 @@ def run(cfg):
         # is it a disregard post? Nuke it and move on -- we don't want those
         # sitting around and cluttering up the sub
         if flair == css_flair.disregard:
+            logging.info(f'Post "{post.title}" is marked as "Disregard", removing.')
             post.mod.remove()
             continue
 
         if flair not in (css_flair.unclaimed, css_flair.completed):
+            logging.info(f'Post "{post.title}" is not completed, skipping removal.')
             continue
 
         # the original post that might have been transcribed
