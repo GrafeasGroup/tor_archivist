@@ -101,14 +101,14 @@ def run(cfg):
         seconds = int((datetime.utcnow() - date).total_seconds())
 
         if CLEAR_THE_QUEUE_MODE:
+            logging.info(f'Removing "{post.title}" because Clear The Queue')
             post.mod.remove()
         elif seconds > hours * 3600:
-            logging.info(
-                f'Post "{post.title}" is older than maximum age of {hours} '
-                f'hours, removing. '
-            )
+            logging.info(f'Post "{post.title}" is older than maximum age of {hours} hours, removing.')
 
             post.mod.remove()
+        else:
+            logging.info(f'Post "{post.title}" is not old enough to remove (<{hours} hours), skipping')
 
         # always process completed posts so we don't have a repeat of the
         # me_irl explosion
@@ -129,7 +129,7 @@ def run(cfg):
             post.mod.remove()
 
     if CLEAR_THE_QUEUE_MODE:
-        logging.info('Clear the Queue Mode is engaged! Back we go!')
+        logging.info('Clear the Queue Mode is engaged! Loop!')
     else:
         logging.info('Finished archiving - sleeping!')
         cfg.sleep_until = time.time() + thirty_minutes
