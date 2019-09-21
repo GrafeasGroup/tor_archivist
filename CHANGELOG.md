@@ -3,7 +3,7 @@
 We follow [Semantic Versioning](http://semver.org/) as a way of measuring stability of an update. This
 means we will never make a backwards-incompatible change within a major version of the project.
 
-## [0.5.0] -- 2019-10-18
+## [0.5.0] -- 2019-09-20
 
 - Link to the transcription comment directly in archive posts, rather than to the original post itself.
 
