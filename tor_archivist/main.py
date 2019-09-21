@@ -89,7 +89,7 @@ def run(cfg):
 
         # find the original post subreddit
         # take it in lowercase so the config is case insensitive
-        post_subreddit = original_post.subreddit.lower()
+        post_subreddit = str(original_post.subreddit).lower()
 
         # hours until a post from this subreddit should be archived
         hours = cfg.archive_time_subreddits.get(
