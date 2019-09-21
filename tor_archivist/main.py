@@ -108,7 +108,7 @@ def run(cfg):
 
             post.mod.remove()
         else:
-            logging.info(f'Post "{post.title}" is not old enough to remove (<{hours} hours), skipping')
+            logging.debug(f'Post "{post.title}" is not old enough to remove (<{hours} hours), skipping')
 
         # always process completed posts so we don't have a repeat of the
         # me_irl explosion
