@@ -11,20 +11,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@master
-      - name: Install
-        uses: grafeasgroup/actions-poetry@v1.0.0
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
         with:
-          args: install
+          python-version: '3.x'
+          architecture: 'x64'
       - name: Build wheel
-        uses: grafeasgroup/actions-poetry@v1.0.0
-        with:
-          args: run poetry build
+        run: |
+          python -m venv ./.venv
+          source ./.venv/bin/activate
+          pip install --upgrade pip
+          pip install poetry
 
+          poetry build
       - name: GitHub Releases
         uses: fnkr/github-action-ghr@v1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GHR_PATH: dist/*.whl
-      - name: Echo the time of the last step because I'm just trying to get this to work
-        run: echo 'The time was ${{ steps.hello.outputs.time }}.'
+          GHR_PATH: dist/
