@@ -17,9 +17,9 @@ jobs:
         with:
           args: install
       - name: Build wheel
-          uses: grafeasgroup/actions-poetry@v1.0.0
-          with:
-            args: run poetry build
+        uses: grafeasgroup/actions-poetry@v1.0.0
+        with:
+          args: run poetry build
 
       - name: GitHub Releases
         uses: fnkr/github-action-ghr@v1.1
