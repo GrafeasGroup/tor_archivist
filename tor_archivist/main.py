@@ -5,8 +5,9 @@ from datetime import datetime
 
 from tor_archivist import __version__
 from tor_archivist.core.config import config
-from tor_archivist.core.helpers import (css_flair, run_until_dead,
-                                        subreddit_from_url)
+from tor_archivist.core.helpers import (
+    css_flair, run_until_dead, subreddit_from_url
+)
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.strings import reddit_url
 
@@ -17,6 +18,32 @@ DEBUG_MODE = bool(os.getenv('DEBUG_MODE', ''))
 ##############################
 
 thirty_minutes = 1800  # seconds
+
+
+def find_transcription(post):
+    """
+    Browse the top level comments of a thread, and return the first one that
+    is a transcription. Currently pretty much a copy of its counterpart in
+    ToR, which should definitely change later on.
+
+    Because we're only processing posts that u/ToR has already accepted as
+    complete, then we don't need to be as firm with the check to verify the
+    transcription.
+
+    :param post: the thread to look in.
+    :return: the matching comment, or None if it wasn't found.
+    """
+    post.comments.replace_more(limit=0)
+
+    for comment in post.comments.list():
+        if all([
+                _ in comment.body for _ in [
+                    'www.reddit.com/r/TranscribersOfReddit', '&#32;'
+                ]
+        ]):
+            return comment
+
+    return None
 
 
 def noop(cfg):
@@ -51,15 +78,19 @@ def run(cfg):
         # is it a disregard post? Nuke it and move on -- we don't want those
         # sitting around and cluttering up the sub
         if flair == css_flair.disregard:
+            logging.info(f'Post "{post.title}" is marked as "Disregard", removing.')
             post.mod.remove()
             continue
 
         if flair not in (css_flair.unclaimed, css_flair.completed):
+            logging.info(f'Post "{post.title}" is not completed, skipping removal.')
             continue
 
+        # the original post that might have been transcribed
+        original_post = config.r.submission(url=post.url)
+
         # find the original post subreddit
-        # take it in lowercase so the config is case insensitive
-        post_subreddit = subreddit_from_url(post.url).lower()
+        post_subreddit = subreddit_from_url(post.url)
 
         # hours until a post from this subreddit should be archived
         hours = cfg.archive_time_subreddits.get(
@@ -70,27 +101,35 @@ def run(cfg):
         seconds = int((datetime.utcnow() - date).total_seconds())
 
         if CLEAR_THE_QUEUE_MODE:
+            logging.info(f'Removing "{post.title}" because Clear The Queue')
             post.mod.remove()
         elif seconds > hours * 3600:
-            logging.info(
-                f'Post "{post.title}" is older than maximum age of {hours} '
-                f'hours, removing. '
-            )
+            logging.info(f'Post "{post.title}" is older than maximum age of {hours} hours, removing.')
 
             post.mod.remove()
+        else:
+            logging.debug(f'Post "{post.title}" is not old enough to remove (<{hours} hours), skipping')
 
         # always process completed posts so we don't have a repeat of the
         # me_irl explosion
         if flair == css_flair.completed:
             logging.info(f'Archiving completed post "{post.title}"...')
-            cfg.archive.submit(
-                post.title,
-                url=reddit_url.format(post.permalink))
+
+            # look for the transcription
+            transcript = find_transcription(original_post)
+
+            if transcript is not None:
+                cfg.archive.submit(
+                    post.title,
+                    url=reddit_url.format(transcript.permalink))
+                logging.info('Post archived!')
+            else:
+                logging.info('Could not find the transcript - won\'t archive.')
+
             post.mod.remove()
-            logging.info('Post archived!')
 
     if CLEAR_THE_QUEUE_MODE:
-        logging.info('Clear the Queue Mode is engaged! Back we go!')
+        logging.info('Clear the Queue Mode is engaged! Loop!')
     else:
         logging.info('Finished archiving - sleeping!')
         cfg.sleep_until = time.time() + thirty_minutes
