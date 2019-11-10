@@ -26,3 +26,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHR_PATH: dist/*.whl
+      - name: Echo the time of the last step because I'm just trying to get this to work
+        run: echo 'The time was ${{ steps.hello.outputs.time }}.'
