@@ -3,6 +3,10 @@
 We follow [Semantic Versioning](http://semver.org/) as a way of measuring stability of an update. This
 means we will never make a backwards-incompatible change within a major version of the project.
 
+## [UNRELEASED]
+
+- Fixes error thrown if trying to clean a reddit id that has already been cleaned
+
 ## [0.7.0] -- 2019-11-10
 
 - Automatically removes posts that appear to have been removed by partner subs
