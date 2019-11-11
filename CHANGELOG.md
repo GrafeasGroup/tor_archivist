@@ -10,6 +10,7 @@ means we will never make a backwards-incompatible change within a major version 
 ## [0.7.0] -- 2019-11-10
 
 - Automatically removes posts that appear to have been removed by partner subs
+- Better error handling when attempting to clean an already cleaned Reddit ID
 
 ## [0.6.0] -- 2019-11-10
 
