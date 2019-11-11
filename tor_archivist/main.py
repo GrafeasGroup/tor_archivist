@@ -10,6 +10,7 @@ from tor_archivist.core.helpers import (
 )
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.strings import reddit_url
+from tor_archivist.core.reddit_ids import is_removed
 
 ##############################
 CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
@@ -103,10 +104,16 @@ def run(cfg):
         if CLEAR_THE_QUEUE_MODE:
             logging.info(f'Removing "{post.title}" because Clear The Queue')
             post.mod.remove()
+
         elif seconds > hours * 3600:
             logging.info(f'Post "{post.title}" is older than maximum age of {hours} hours, removing.')
 
             post.mod.remove()
+
+        elif is_removed(original_post, full_check=True):
+            logging.info(f'Post "{original_post.title}" looks like it was removed on the other side. Nuking.')
+            post.mod.remove()
+
         else:
             logging.debug(f'Post "{post.title}" is not old enough to remove (<{hours} hours), skipping')
 
