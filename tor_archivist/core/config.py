@@ -178,7 +178,6 @@ class Config(object):
 
     # API keys for later overwriting based on contents of filesystem
     bugsnag_api_key = None
-    sentry_api_url = None
 
     # Templating string for the header of the bot post
     header = ''
@@ -267,12 +266,6 @@ try:
     Config.modchat_api_url = open('modchat.key').readline().strip()
 except OSError:
     Config.modchat_api_url = os.environ.get('MODCHAT_API_URL', None)
-
-
-try:
-    Config.sentry_api_url = open('sentry.key').readline().strip()
-except OSError:
-    Config.sentry_api_url = os.environ.get('SENTRY_API_URL', None)
 
 # ----- Compatibility -----
 config = Config()
