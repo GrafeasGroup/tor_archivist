@@ -20,7 +20,7 @@ DEBUG_MODE = bool(os.getenv('DEBUG_MODE', ''))
 
 thirty_minutes = 1800  # seconds
 
-
+# TODO: get data from blossom instead
 def find_transcription(post):
     """
     Browse the top level comments of a thread, and return the first one that
@@ -54,6 +54,7 @@ def noop(cfg):
 
 def run(cfg):
     if not CLEAR_THE_QUEUE_MODE and cfg.sleep_until >= time.time():
+        # TODO: if ctq is active, send ctq query parameter to expired endpoint
         # This is how we sleep for longer periods, but still respond to
         # CTRL+C quickly: trigger an event loop every minute during wait
         # time.
@@ -66,26 +67,26 @@ def run(cfg):
     # but we should make it stop after a certain amount of time anyway
     # eg. if it encounters a post >36 hours old, it will break the loop
 
-    # TODO we can use .submissions(end=unixtime) apparently
+    # TODO: get posts from blossom unarchived endpoint
     for post in cfg.tor.new(limit=1000):
 
-        # [META] - do nothing
-        # [UNCLAIMED] - remove
-        # [COMPLETED] - remove and x-post to r/tor_archive
-        # [IN PROGRESS] - do nothing (should discuss)
-        # [DISREGARD] - remove
-        flair = post.link_flair_css_class
+        # # [META] - do nothing
+        # # [UNCLAIMED] - remove
+        # # [COMPLETED] - remove and x-post to r/tor_archive
+        # # [IN PROGRESS] - do nothing (should discuss)
+        # # [DISREGARD] - remove
+        # flair = post.link_flair_css_class
 
-        # is it a disregard post? Nuke it and move on -- we don't want those
-        # sitting around and cluttering up the sub
-        if flair == css_flair.disregard:
-            logging.info(f'Post "{post.title}" is marked as "Disregard", removing.')
-            post.mod.remove()
-            continue
+        # # is it a disregard post? Nuke it and move on -- we don't want those
+        # # sitting around and cluttering up the sub
+        # if flair == css_flair.disregard:
+        #     logging.info(f'Post "{post.title}" is marked as "Disregard", removing.')
+        #     post.mod.remove()
+        #     continue
 
-        if flair not in (css_flair.unclaimed, css_flair.completed):
-            logging.info(f'Post "{post.title}" is not completed, skipping removal.')
-            continue
+        # if flair not in (css_flair.unclaimed, css_flair.completed):
+        #     logging.info(f'Post "{post.title}" is not completed, skipping removal.')
+        #     continue
 
         # the original post that might have been transcribed
         original_post = config.r.submission(url=post.url)
@@ -105,35 +106,37 @@ def run(cfg):
             logging.info(f'Removing "{post.title}" because Clear The Queue')
             post.mod.remove()
 
-        elif seconds > hours * 3600:
-            logging.info(f'Post "{post.title}" is older than maximum age of {hours} hours, removing.')
+        # elif seconds > hours * 3600:
+        #     logging.info(f'Post "{post.title}" is older than maximum age of {hours} hours, removing.')
 
             post.mod.remove()
 
+
+        # else:
+        #     logging.debug(f'Post "{post.title}" is not old enough to remove (<{hours} hours), skipping')
+
+        # always process completed posts so we don't have a repeat of the
+        # me_irl explosion
+        # if flair == css_flair.completed:
+        logging.info(f'Archiving completed post "{post.title}"...')
+
+        # look for the transcription
+        transcript = find_transcription(original_post)
+
+        # change to check transcription record on blossom for removed_from_reddit
         elif is_removed(original_post, full_check=True):
             logging.info(f'Post "{original_post.title}" looks like it was removed on the other side. Nuking.')
             post.mod.remove()
 
+        if transcript is not None:
+            cfg.archive.submit(
+                post.title,
+                url=reddit_url.format(transcript.permalink))
+            logging.info('Post archived!')
         else:
-            logging.debug(f'Post "{post.title}" is not old enough to remove (<{hours} hours), skipping')
+            logging.info('Could not find the transcript - won\'t archive.')
 
-        # always process completed posts so we don't have a repeat of the
-        # me_irl explosion
-        if flair == css_flair.completed:
-            logging.info(f'Archiving completed post "{post.title}"...')
-
-            # look for the transcription
-            transcript = find_transcription(original_post)
-
-            if transcript is not None:
-                cfg.archive.submit(
-                    post.title,
-                    url=reddit_url.format(transcript.permalink))
-                logging.info('Post archived!')
-            else:
-                logging.info('Could not find the transcript - won\'t archive.')
-
-            post.mod.remove()
+        post.mod.remove()
 
     if CLEAR_THE_QUEUE_MODE:
         logging.info('Clear the Queue Mode is engaged! Loop!')
