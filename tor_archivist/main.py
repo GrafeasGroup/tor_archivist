@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import dotenv
 from datetime import datetime
 
 from tor_archivist import __version__
@@ -11,6 +12,7 @@ from tor_archivist.core.helpers import (
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.strings import reddit_url
 from tor_archivist.core.reddit_ids import is_removed
+from tor_archivist.core.blossom import BlossomAPI
 
 ##############################
 CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
@@ -20,7 +22,17 @@ DEBUG_MODE = bool(os.getenv('DEBUG_MODE', ''))
 
 thirty_minutes = 1800  # seconds
 
-# TODO: get data from blossom instead
+dotenv.load_dotenv()
+
+b_api = BlossomAPI(
+    email=os.environ.get('TOR_OCR_EMAIL'), 
+    password=os.environ.get('TOR_OCR_PASSWORD'), 
+    api_key=os.environ.get('TOR_OCR_BLOSSOM_API_KEY'), 
+    api_base_url=os.environ.get('TOR_OCR_BLOSSOM_API_BASE_URL'),
+    login_url=os.environ.get('TOR_OCR_BLOSSOM_API_LOGIN_URL')
+)
+
+# this helper function seems redundant now
 def find_transcription(post):
     """
     Browse the top level comments of a thread, and return the first one that
@@ -34,15 +46,18 @@ def find_transcription(post):
     :param post: the thread to look in.
     :return: the matching comment, or None if it wasn't found.
     """
-    post.comments.replace_more(limit=0)
 
-    for comment in post.comments.list():
-        if all([
-                _ in comment.body for _ in [
-                    'www.reddit.com/r/TranscribersOfReddit', '&#32;'
-                ]
-        ]):
-            return comment
+    
+
+    # post.comments.replace_more(limit=0)
+
+    # for comment in post.comments.list():
+    #     if all([
+    #             _ in comment.body for _ in [
+    #                 'www.reddit.com/r/TranscribersOfReddit', '&#32;'
+    #             ]
+    #     ]):
+    #         return comment
 
     return None
 
@@ -62,81 +77,49 @@ def run(cfg):
         return
 
     logging.info('Starting archiving of old posts...')
-    # TODO the bot will now check ALL posts on the subreddit.
-    # when we remove old transcription requests, there aren't too many left.
-    # but we should make it stop after a certain amount of time anyway
-    # eg. if it encounters a post >36 hours old, it will break the loop
 
-    # TODO: get posts from blossom unarchived endpoint
-    for post in cfg.tor.new(limit=1000):
+    try:
+        # get posts from blossom unarchived endpoint
+        unarchived_submissions = b_api.get("/submission/unarchived/").json()['data']
 
-        # # [META] - do nothing
-        # # [UNCLAIMED] - remove
-        # # [COMPLETED] - remove and x-post to r/tor_archive
-        # # [IN PROGRESS] - do nothing (should discuss)
-        # # [DISREGARD] - remove
-        # flair = post.link_flair_css_class
+        for submission in unarchived_submissions:
 
-        # # is it a disregard post? Nuke it and move on -- we don't want those
-        # # sitting around and cluttering up the sub
-        # if flair == css_flair.disregard:
-        #     logging.info(f'Post "{post.title}" is marked as "Disregard", removing.')
-        #     post.mod.remove()
-        #     continue
+            post_subreddit = subreddit_from_url(submission['url'])
 
-        # if flair not in (css_flair.unclaimed, css_flair.completed):
-        #     logging.info(f'Post "{post.title}" is not completed, skipping removal.')
-        #     continue
+            # the original post from r/ToR that might have been transcribed
+            reddit_post = config.r.submission(id=submission['submission_id'])
 
-        # the original post that might have been transcribed
-        original_post = config.r.submission(url=post.url)
+            # unccomment the below line in prodution to remove original r/ToR post
+            # reddit_post.mod.remove()
 
-        # find the original post subreddit
-        post_subreddit = subreddit_from_url(post.url)
+            transcription = b_api.get(f"/transcription/{submission['id']}").json()
 
-        # hours until a post from this subreddit should be archived
-        hours = cfg.archive_time_subreddits.get(
-            post_subreddit, cfg.archive_time_default)
+            logging.info(f'original reddit post obj: {reddit_post}')
+            logging.info(f'post from blossom: {submission}')
+            logging.info(f'subreddit: {post_subreddit}')
+            logging.info(transcription)
 
-        # time since this post was made
-        date = datetime.utcfromtimestamp(post.created_utc)
-        seconds = int((datetime.utcnow() - date).total_seconds())
+            b_api.patch(f"/submission/{submission['id']}/", {'archived': True} )
 
-        if CLEAR_THE_QUEUE_MODE:
-            logging.info(f'Removing "{post.title}" because Clear The Queue')
-            post.mod.remove()
+            if transcription['url'] != None:
+                cfg.archive.submit(
+                    reddit_post.title,
+                    url=transcription['url']
+                )
+                logging.info('Post archived!')
+    except:
+        logging.info('no unarchived submissions')
 
-        # elif seconds > hours * 3600:
-        #     logging.info(f'Post "{post.title}" is older than maximum age of {hours} hours, removing.')
-
-            post.mod.remove()
-
-
-        # else:
-        #     logging.debug(f'Post "{post.title}" is not old enough to remove (<{hours} hours), skipping')
-
-        # always process completed posts so we don't have a repeat of the
-        # me_irl explosion
-        # if flair == css_flair.completed:
-        logging.info(f'Archiving completed post "{post.title}"...')
-
-        # look for the transcription
-        transcript = find_transcription(original_post)
-
-        # change to check transcription record on blossom for removed_from_reddit
-        elif is_removed(original_post, full_check=True):
-            logging.info(f'Post "{original_post.title}" looks like it was removed on the other side. Nuking.')
-            post.mod.remove()
-
-        if transcript is not None:
-            cfg.archive.submit(
-                post.title,
-                url=reddit_url.format(transcript.permalink))
-            logging.info('Post archived!')
-        else:
-            logging.info('Could not find the transcript - won\'t archive.')
-
-        post.mod.remove()
+    try:
+        expired_submissions = b_api.get("/submission/expired").json()['data']
+        for submission in expired_submissions:
+            # the original post from r/ToR that might have been transcribed
+            reddit_post = config.r.submission(id=submission['submission_id'])
+            # unccomment the below line in prodution to remove original r/ToR post
+            # reddit_post.mod.remove()
+            b_api.patch(f"/submission/{submission['id']}/", {'archived': True} )
+    except:
+        logging.info('no expired submissions')
 
     if CLEAR_THE_QUEUE_MODE:
         logging.info('Clear the Queue Mode is engaged! Loop!')
@@ -150,7 +133,7 @@ def main():
     bot_name = 'debug' if config.debug_mode else os.getenv('BOT_NAME', 'bot_archiver')
 
     build_bot(bot_name, __version__, full_name='u/transcribot')
-    config.archive = config.r.subreddit('ToR_Archive')
+    config.archive = config.r.subreddit('tor_testing_ground')
     config.sleep_until = 0
     if NOOP_MODE:
         run_until_dead(noop)
