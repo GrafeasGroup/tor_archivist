@@ -32,36 +32,6 @@ b_api = BlossomAPI(
     login_url=os.environ.get('TOR_OCR_BLOSSOM_API_LOGIN_URL')
 )
 
-# this helper function seems redundant now
-def find_transcription(post):
-    """
-    Browse the top level comments of a thread, and return the first one that
-    is a transcription. Currently pretty much a copy of its counterpart in
-    ToR, which should definitely change later on.
-
-    Because we're only processing posts that u/ToR has already accepted as
-    complete, then we don't need to be as firm with the check to verify the
-    transcription.
-
-    :param post: the thread to look in.
-    :return: the matching comment, or None if it wasn't found.
-    """
-
-    
-
-    # post.comments.replace_more(limit=0)
-
-    # for comment in post.comments.list():
-    #     if all([
-    #             _ in comment.body for _ in [
-    #                 'www.reddit.com/r/TranscribersOfReddit', '&#32;'
-    #             ]
-    #     ]):
-    #         return comment
-
-    return None
-
-
 def noop(cfg):
     time.sleep(10)
     logging.info('Loop!')
@@ -78,48 +48,52 @@ def run(cfg):
 
     logging.info('Starting archiving of old posts...')
 
-    try:
-        # get posts from blossom unarchived endpoint
-        unarchived_submissions = b_api.get("/submission/unarchived/").json()['data']
 
-        for submission in unarchived_submissions:
+    if unarchived_submissions := b_api.get("/submission/unarchived/").json():
+        if unarchived_submissions.get('data'):
+            for submission in unarchived_submissions['data']:
 
-            post_subreddit = subreddit_from_url(submission['url'])
+                post_subreddit = subreddit_from_url(submission['url'])
 
-            # the original post from r/ToR that might have been transcribed
-            reddit_post = config.r.submission(id=submission['submission_id'])
+                # the original post from r/ToR that might have been transcribed
+                reddit_post = config.r.submission(id=submission['submission_id'])
 
-            # unccomment the below line in prodution to remove original r/ToR post
-            # reddit_post.mod.remove()
+                # unccomment the below line in prodution to remove original r/ToR post
+                # reddit_post.mod.remove()
 
-            transcription = b_api.get(f"/transcription/{submission['id']}").json()
+                transcription = b_api.get(
+                    f"/transcription/search/?submission_id={submission['submission_id']}"
+                ).json()
+                if transcription.get('data'):
+                    transcription = transcription['data'][0]
+                    b_api.patch(f"/submission/{submission['id']}/", {'archived': True} )
 
-            logging.info(f'original reddit post obj: {reddit_post}')
-            logging.info(f'post from blossom: {submission}')
-            logging.info(f'subreddit: {post_subreddit}')
-            logging.info(transcription)
+                    # for now we are not going to backup the ToR archive url, but we can 
+                    # address later
+                    if transcription['url'] != None:
+                        cfg.archive.submit(
+                            reddit_post.title,
+                            url=transcription['url']
+                        )
+                        logging.info('Post archived!')
+                else:
+                    logging.info(
+                        f'could not find transcription for post id'
+                        f" {submission['submission_id']}"
+                    )
+        else:
+            logging.debug('no unarchived submissions')
 
-            b_api.patch(f"/submission/{submission['id']}/", {'archived': True} )
-
-            if transcription['url'] != None:
-                cfg.archive.submit(
-                    reddit_post.title,
-                    url=transcription['url']
-                )
-                logging.info('Post archived!')
-    except:
-        logging.info('no unarchived submissions')
-
-    try:
-        expired_submissions = b_api.get("/submission/expired").json()['data']
-        for submission in expired_submissions:
-            # the original post from r/ToR that might have been transcribed
-            reddit_post = config.r.submission(id=submission['submission_id'])
-            # unccomment the below line in prodution to remove original r/ToR post
-            # reddit_post.mod.remove()
-            b_api.patch(f"/submission/{submission['id']}/", {'archived': True} )
-    except:
-        logging.info('no expired submissions')
+    if expired_submissions := b_api.get("/submission/expired/").json():
+        if expired_submissions.get('data'):
+            for submission in expired_submissions['data']:
+                # the original post from r/ToR that might have been transcribed
+                reddit_post = config.r.submission(id=submission['submission_id'])
+                # unccomment the below line in prodution to remove original r/ToR post
+                # reddit_post.mod.remove()
+                b_api.patch(f"/submission/{submission['id']}/", {'archived': True} )
+        else:
+            logging.debug('no expired submissions')
 
     if CLEAR_THE_QUEUE_MODE:
         logging.info('Clear the Queue Mode is engaged! Loop!')
@@ -133,7 +107,11 @@ def main():
     bot_name = 'debug' if config.debug_mode else os.getenv('BOT_NAME', 'bot_archiver')
 
     build_bot(bot_name, __version__, full_name='u/transcribot')
+    
     config.archive = config.r.subreddit('tor_testing_ground')
+
+    # change config.archive to tor_archive in production
+    # config.archive = config.r.subreddit('tor_archive')
     config.sleep_until = 0
     if NOOP_MODE:
         run_until_dead(noop)
