@@ -108,10 +108,8 @@ def main():
 
     build_bot(bot_name, __version__, full_name='u/transcribot')
     
-    config.archive = config.r.subreddit('tor_testing_ground')
+    config.archive = config.r.subreddit(os.environ.get('ARCHIVE_SUBREDDIT'))
 
-    # change config.archive to tor_archive in production
-    # config.archive = config.r.subreddit('tor_archive')
     config.sleep_until = 0
     if NOOP_MODE:
         run_until_dead(noop)
