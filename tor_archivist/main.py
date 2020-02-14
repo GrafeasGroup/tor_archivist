@@ -108,7 +108,7 @@ def main():
 
     build_bot(bot_name, __version__, full_name='u/transcribot')
     
-    config.archive = config.r.subreddit(os.environ.get('ARCHIVE_SUBREDDIT'))
+    config.archive = config.r.subreddit(os.environ.get('ARCHIVE_SUBREDDIT', 'tor_archive'))
 
     config.sleep_until = 0
     if NOOP_MODE:
