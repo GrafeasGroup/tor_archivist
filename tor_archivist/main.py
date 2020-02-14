@@ -66,7 +66,7 @@ def run(cfg):
                 ).json()
                 if transcription.get('data'):
                     transcription = transcription['data'][0]
-                    b_api.patch(f"/submission/{submission['id']}/", {'archived': True} )
+                    b_api.patch(f"/submission/{submission['id']}/", {'archived': True})
 
                     # for now we are not going to backup the ToR archive url, but we can 
                     # address later
