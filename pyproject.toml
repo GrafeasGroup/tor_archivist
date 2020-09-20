@@ -5,24 +5,26 @@ description = "The officially licensed archivist for /r/TranscribersOfReddit"
 authors = ["Grafeas Group <devs@grafeas.org>"]
 license = "MIT"
 classifiers = [
-    'Development Status :: 1 - Planning',
-    'Intended Audience :: End Users/Desktop',
-    'Topic :: Communications :: BBS'
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8"
 ]
+
 repository = "https://github.com/GrafeasGroup/tor_archivist"
 homepage = "https://github.com/GrafeasGroup/tor_archivist"
 exclude = ['test', 'test.*', '*.test.*', '*.test']
 
 [tool.poetry.dependencies]
 python = "^3.6"
-praw = "=5.0.1"
-redis = "^2"
+praw = "^7.1.0"
 sh = "^1.12"
-cherrypy = "^18.2"
 bugsnag = "^3.6"
 requests = "^2.22"
 slackclient = "^1"
 python-dotenv = "^0.10.5"
+blossom-wrapper = { git = "https://github.com/GrafeasGroup/blossom-wrapper.git", branch = "master" }
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"
