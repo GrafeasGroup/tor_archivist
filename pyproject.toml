@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tor_archivist"
-version = "0.7.0"
+version = "0.7.1"
 description = "The officially licensed archivist for /r/TranscribersOfReddit"
 authors = ["Grafeas Group <devs@grafeas.org>"]
 license = "MIT"
