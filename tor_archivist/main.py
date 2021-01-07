@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import time
@@ -19,6 +20,15 @@ DEBUG_MODE = bool(os.getenv('DEBUG_MODE', ''))
 ##############################
 
 thirty_minutes = 1800  # seconds
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(allow_abbrev=False)
+    parser.add_argument('--version', action='version', version=__version__)
+    parser.add_argument('--debug', action='store_true', default=DEBUG_MODE, help='Puts bot in dev-mode using non-prod credentials')
+    parser.add_argument('--noop', action='store_true', default=NOOP_MODE, help='Just run the daemon, but take no action (helpful for testing infrastructure changes)')
+
+    return parser.parse_args()
 
 
 def find_transcription(post):
@@ -143,13 +153,14 @@ def run(cfg):
 
 
 def main():
-    config.debug_mode = DEBUG_MODE
+    opt = parse_arguments()
+    config.debug_mode = opt.debug
     bot_name = 'debug' if config.debug_mode else os.getenv('BOT_NAME', 'bot_archiver')
 
     build_bot(bot_name, __version__, full_name='u/transcribot')
     config.archive = config.r.subreddit('ToR_Archive')
     config.sleep_until = 0
-    if NOOP_MODE:
+    if opt.noop:
         run_until_dead(noop)
     else:
         run_until_dead(run)
