@@ -4,6 +4,8 @@ import os
 import time
 from datetime import datetime
 
+import prawcore.exceptions
+
 from tor_archivist import __version__
 from tor_archivist.core.config import config
 from tor_archivist.core.helpers import (
@@ -98,9 +100,15 @@ def run(cfg):
             continue
 
         # the original post that might have been transcribed
-        original_post = config.r.submission(url=post.url)
+        try:
+            logging.debug("Fetching original post from url")
+            original_post = config.r.submission(url=post.url)
+        except prawcore.exceptions.Forbidden:
+            logging.warning("Unable to retrieve the original submission. Skipping archiving of post")
+            original_post = None
 
         # find the original post subreddit
+        logging.debug("pulling original subreddit from url")
         post_subreddit = subreddit_from_url(post.url)
 
         # hours until a post from this subreddit should be archived
@@ -120,7 +128,7 @@ def run(cfg):
 
             post.mod.remove()
 
-        elif is_removed(original_post, full_check=True):
+        elif original_post is not None and is_removed(original_post, full_check=True):
             logging.info(f'Post "{original_post.title}" looks like it was removed on the other side. Nuking.')
             post.mod.remove()
 
@@ -132,8 +140,18 @@ def run(cfg):
         if flair == css_flair.completed:
             logging.info(f'Archiving completed post "{post.title}"...')
 
-            # look for the transcription
-            transcript = find_transcription(original_post)
+            # TODO: Later iterations we should post transcription to Blossom and
+            # retrieve from there after u/tor processes the `done` directive. Until
+            # then, we have no way of grabbing the transcription in order to
+            # cross-post so we'll just remove it instead.
+
+            transcript = None
+            try:
+                # look for the transcription
+                if original_post is not None:
+                    transcript = find_transcription(original_post)
+            except prawcore.exceptions.Forbidden:
+                pass
 
             if transcript is not None:
                 cfg.archive.submit(
