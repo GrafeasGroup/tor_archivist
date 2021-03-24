@@ -4,6 +4,8 @@ import os
 import time
 from datetime import datetime
 
+import prawcore.exceptions
+
 from tor_archivist import __version__
 from tor_archivist.core.config import config
 from tor_archivist.core.helpers import (
@@ -98,9 +100,15 @@ def run(cfg):
             continue
 
         # the original post that might have been transcribed
-        original_post = config.r.submission(url=post.url)
+        try:
+            logging.debug("Fetching original post from url")
+            original_post = config.r.submission(url=post.url)
+        except prawcore.exceptions.Forbidden:
+            logging.warning("Unable to retrieve the original submission. Skipping archiving of post")
+            continue
 
         # find the original post subreddit
+        logging.debug("pulling original subreddit from url")
         post_subreddit = subreddit_from_url(post.url)
 
         # hours until a post from this subreddit should be archived
