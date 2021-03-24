@@ -7,7 +7,7 @@ means we will never make a backwards-incompatible change within a major version 
 
 - Fixes errors when partner subreddits decide to go private
 
-## [0.7.1] -- ????
+## [0.7.1] -- 2021-01-06
 
 - Fixes error thrown if trying to clean a reddit id that has already been cleaned
 
