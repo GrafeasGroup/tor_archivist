@@ -3,6 +3,10 @@
 We follow [Semantic Versioning](http://semver.org/) as a way of measuring stability of an update. This
 means we will never make a backwards-incompatible change within a major version of the project.
 
+## [0.7.3] -- 2021-04-05
+
+- Odd error with PRAW in https://github.com/GrafeasGroup/tor necessitates a core library upgrade
+
 ## [0.7.2] -- 2021-03-24
 
 - Fixes errors when partner subreddits decide to go private
