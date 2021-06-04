@@ -139,7 +139,7 @@ def run(cfg: Config) -> None:
 def main():
     opt = parse_arguments()
     config.debug_mode = opt.debug
-    bot_name = 'debug' if config.debug_mode else os.getenv('BOT_NAME', 'bot_archiver')
+    bot_name = 'debug' if config.debug_mode else 'tor_archivist'
 
     build_bot(bot_name, TOR_ARCHIVIST_VERSION)
 
