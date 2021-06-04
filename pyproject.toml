@@ -14,9 +14,8 @@ homepage = "https://github.com/GrafeasGroup/tor_archivist"
 exclude = ['test', 'test.*', '*.test.*', '*.test']
 
 [tool.poetry.dependencies]
-python = "^3.6"
-praw = "^5.0.1"
-redis = "^2"
+python = "^3.9"
+praw = "^7.1.0"
 sh = "^1.12"
 cherrypy = "^18.2"
 bugsnag = "^3.6"
