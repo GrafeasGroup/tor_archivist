@@ -5,7 +5,6 @@ import time
 from typing import Any, Dict
 
 import dotenv
-import pkg_resources
 from blossom_wrapper import BlossomStatus
 
 from tor_archivist.core.config import Config
@@ -20,6 +19,11 @@ from tor_archivist.core.strings import reddit_url
 CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
 NOOP_MODE = bool(os.getenv('NOOP_MODE', ''))
 DEBUG_MODE = bool(os.getenv('DEBUG_MODE', ''))
+
+# TODO: Remove the lines below with hardcoded versions.
+TOR_OCR_VERSION = "0.3.0"
+TOR_ARCHIVIST_VERSION = "1.0.0"
+
 ##############################
 
 thirty_minutes = 1800  # seconds
@@ -29,7 +33,7 @@ dotenv.load_dotenv()
 
 def parse_arguments():
     parser = argparse.ArgumentParser(allow_abbrev=False)
-    parser.add_argument('--version', action='version', version=pkg_resources.get_distribution("tor_ocr").version)
+    parser.add_argument('--version', action='version', version=TOR_OCR_VERSION)
     parser.add_argument('--debug', action='store_true', default=DEBUG_MODE,
                         help='Puts bot in dev-mode using non-prod credentials')
     parser.add_argument('--noop', action='store_true', default=NOOP_MODE,
@@ -137,7 +141,7 @@ def main():
     config.debug_mode = opt.debug
     bot_name = 'debug' if config.debug_mode else os.getenv('BOT_NAME', 'bot_archiver')
 
-    build_bot(bot_name, pkg_resources.get_distribution('tor_archivist').version)
+    build_bot(bot_name, TOR_ARCHIVIST_VERSION)
 
     config.archive = config.r.subreddit(os.environ.get('ARCHIVE_SUBREDDIT', 'ToR_Archive'))
 
