@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import time
@@ -7,7 +8,8 @@ import dotenv
 import pkg_resources
 from blossom_wrapper import BlossomStatus
 
-from tor_archivist.core.config import config, Config
+from tor_archivist.core.config import Config
+from tor_archivist.core.config import config
 from tor_archivist.core.helpers import (
     run_until_dead, get_id_from_url
 )
@@ -23,6 +25,17 @@ DEBUG_MODE = bool(os.getenv('DEBUG_MODE', ''))
 thirty_minutes = 1800  # seconds
 
 dotenv.load_dotenv()
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(allow_abbrev=False)
+    parser.add_argument('--version', action='version', version=pkg_resources.get_distribution("tor_ocr").version)
+    parser.add_argument('--debug', action='store_true', default=DEBUG_MODE,
+                        help='Puts bot in dev-mode using non-prod credentials')
+    parser.add_argument('--noop', action='store_true', default=NOOP_MODE,
+                        help='Just run the daemon, but take no action (helpful for testing infrastructure changes)')
+
+    return parser.parse_args()
 
 
 def noop(*args: Any) -> None:
@@ -120,7 +133,8 @@ def run(cfg: Config) -> None:
 
 
 def main():
-    config.debug_mode = DEBUG_MODE
+    opt = parse_arguments()
+    config.debug_mode = opt.debug
     bot_name = 'debug' if config.debug_mode else os.getenv('BOT_NAME', 'bot_archiver')
 
     build_bot(bot_name, pkg_resources.get_distribution('tor_archivist').version)
@@ -129,7 +143,7 @@ def main():
 
     # jumpstart the clock -- allow running immediately after starting.
     config.sleep_until = 0
-    if NOOP_MODE:
+    if opt.noop:
         run_until_dead(noop)
     else:
         run_until_dead(run)

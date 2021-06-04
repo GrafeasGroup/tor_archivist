@@ -30,6 +30,8 @@ blossom-wrapper = { git = "https://github.com/GrafeasGroup/blossom-wrapper.git",
 better-exceptions = "^0.2.2"
 pytest = "^5.1"
 pytest-cov = "^2.7"
+flake8 = "^3.7.9"
+mypy = "^0.761"
 
 [tool.poetry.scripts]
 tor-archivist = "tor_archivist.main:main"
