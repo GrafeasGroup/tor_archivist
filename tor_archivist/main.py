@@ -21,8 +21,7 @@ NOOP_MODE = bool(os.getenv('NOOP_MODE', ''))
 DEBUG_MODE = bool(os.getenv('DEBUG_MODE', ''))
 
 # TODO: Remove the lines below with hardcoded versions.
-TOR_OCR_VERSION = "0.3.0"
-TOR_ARCHIVIST_VERSION = "1.0.0"
+__VERSION__ = "1.0.0"
 
 ##############################
 
@@ -33,7 +32,7 @@ dotenv.load_dotenv()
 
 def parse_arguments():
     parser = argparse.ArgumentParser(allow_abbrev=False)
-    parser.add_argument('--version', action='version', version=TOR_OCR_VERSION)
+    parser.add_argument('--version', action='version', version=__VERSION__)
     parser.add_argument('--debug', action='store_true', default=DEBUG_MODE,
                         help='Puts bot in dev-mode using non-prod credentials')
     parser.add_argument('--noop', action='store_true', default=NOOP_MODE,
@@ -123,25 +122,25 @@ def run(cfg: Config) -> None:
         time.sleep(5)
         return
 
+    if CLEAR_THE_QUEUE_MODE:
+        logging.info('Clear the Queue Mode is engaged!')
+    else:
+        cfg.sleep_until = time.time() + thirty_minutes
+
     logging.info('Starting archiving of old posts...')
 
     archive_completed_posts(cfg)
-
     process_expired_posts(cfg)
 
-    if CLEAR_THE_QUEUE_MODE:
-        logging.info('Clear the Queue Mode is engaged! Loop!')
-    else:
+    if not CLEAR_THE_QUEUE_MODE:
         logging.info('Finished archiving - sleeping!')
-        cfg.sleep_until = time.time() + thirty_minutes
-
 
 def main():
     opt = parse_arguments()
     config.debug_mode = opt.debug
     bot_name = 'debug' if config.debug_mode else 'tor_archivist'
 
-    build_bot(bot_name, TOR_ARCHIVIST_VERSION)
+    build_bot(bot_name, __VERSION__)
 
     config.archive = config.r.subreddit(os.environ.get('ARCHIVE_SUBREDDIT', 'ToR_Archive'))
 
