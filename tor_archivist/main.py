@@ -137,7 +137,6 @@ def run(cfg: Config) -> None:
 
 def main():
     opt = parse_arguments()
-    1 / 0
 
     config.debug_mode = opt.debug
     bot_name = 'debug' if config.debug_mode else 'tor_archivist'
