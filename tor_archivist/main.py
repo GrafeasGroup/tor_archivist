@@ -105,7 +105,7 @@ def archive_completed_posts(cfg: Config) -> None:
 
             cfg.archive.submit(
                 reddit_post.title,
-                url=reddit_url.format(transcription['url'])
+                url=transcription['url']
             )
             logging.info(
                 f"Submission {submission['id']} - original_id"
