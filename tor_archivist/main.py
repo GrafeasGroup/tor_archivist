@@ -65,7 +65,7 @@ def process_expired_posts(cfg: Config) -> None:
 
 def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
     response = cfg.blossom.get("transcription/search/", params={"submission_id": submission["id"]})
-    for transcription in response.json():
+    for transcription in response.data:
         if int(get_id_from_url(transcription['author'])) == config.transcribot['id']:
             continue
         else:
