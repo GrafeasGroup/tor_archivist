@@ -103,6 +103,9 @@ def archive_completed_posts(cfg: Config) -> None:
                 )
                 continue
 
+            if "reddit.com" not in transcription['url']:
+                transcription['url'] = f"https://reddit.com{transcription['url']}"
+
             cfg.archive.submit(
                 reddit_post.title,
                 url=transcription['url']
