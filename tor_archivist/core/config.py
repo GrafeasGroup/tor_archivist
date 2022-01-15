@@ -79,13 +79,8 @@ class Config(object):
     r = None
     # the subreddit of the archives. Default is r/ToR_Archive
     archive = None
-
-    @cached_property
-    def tor(self):
-        if self.debug_mode:
-            return self.r.subreddit("ModsOfTor")
-        else:
-            return self.r.subreddit("transcribersofreddit")
+    # the main subreddit. Default is r/TranscribersOfReddit
+    tor = None
 
 
 try:

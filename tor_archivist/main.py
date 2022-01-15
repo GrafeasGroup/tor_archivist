@@ -126,8 +126,7 @@ def archive_completed_posts(cfg: Config) -> None:
 
 def track_post_removal(cfg: Config) -> None:
     """Process the mod log and sync post removals to Blossom."""
-    tor = cfg.r.subreddit("TranscribersOfReddit")
-    for log in tor.mod.log(action="removelink", limit=100):
+    for log in cfg.tor.mod.log(action="removelink", limit=100):
         mod = log.mod
         tor_url = "https://reddit.com" + log.target_permalink
         create_time = datetime.datetime.fromtimestamp(log.created_utc)
@@ -213,6 +212,9 @@ def main():
 
     config.archive = config.r.subreddit(
         os.environ.get("ARCHIVE_SUBREDDIT", "ToR_Archive")
+    )
+    config.tor = config.r.subreddit(
+        os.environ.get("TOR_SUBREDDIT", "TranscribersOfReddit")
     )
 
     # jumpstart the clock -- allow running immediately after starting.
