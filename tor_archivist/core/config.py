@@ -61,6 +61,7 @@ class Config(object):
     A singleton object for checking global configuration from
     anywhere in the application
     """
+
     # API keys for later overwriting based on contents of filesystem
     bugsnag_api_key = None
 
@@ -68,7 +69,7 @@ class Config(object):
 
     # Name of the bot
     name = None
-    bot_version = '0.0.0'  # this should get overwritten by the bot process
+    bot_version = "0.0.0"  # this should get overwritten by the bot process
 
     last_post_scan_time = datetime.datetime(1970, 1, 1, 1, 1, 1)
 
@@ -82,20 +83,20 @@ class Config(object):
     @cached_property
     def tor(self):
         if self.debug_mode:
-            return self.r.subreddit('ModsOfTor')
+            return self.r.subreddit("ModsOfTor")
         else:
-            return self.r.subreddit('transcribersofreddit')
+            return self.r.subreddit("transcribersofreddit")
 
 
 try:
-    Config.bugsnag_api_key = open('bugsnag.key').readline().strip()
+    Config.bugsnag_api_key = open("bugsnag.key").readline().strip()
 except OSError:
-    Config.bugsnag_api_key = os.environ.get('BUGSNAG_API_KEY', None)
+    Config.bugsnag_api_key = os.environ.get("BUGSNAG_API_KEY", None)
 
 if bugsnag and Config.bugsnag_api_key:
     bugsnag.configure(
         api_key=Config.bugsnag_api_key,
-        app_version=pkg_resources.get_distribution('tor_archivist').version
+        app_version=pkg_resources.get_distribution("tor_archivist").version,
     )
 
 # ----- Compatibility -----
