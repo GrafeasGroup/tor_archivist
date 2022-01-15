@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 import os
 import time
@@ -13,10 +14,16 @@ from tor_archivist.core.helpers import run_until_dead, get_id_from_url
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.strings import reddit_url
 
+dotenv.load_dotenv()
+
 ##############################
 CLEAR_THE_QUEUE_MODE = bool(os.getenv("CLEAR_THE_QUEUE", ""))
 NOOP_MODE = bool(os.getenv("NOOP_MODE", ""))
 DEBUG_MODE = bool(os.getenv("DEBUG_MODE", ""))
+
+DISABLE_COMPLETED_ARCHIVING = bool(os.getenv("DISABLE_COMPLETED_ARCHIVING", False))
+DISABLE_EXPIRED_ARCHIVING = bool(os.getenv("DISABLE_EXPIRED_ARCHIVING", False))
+DISABLE_POST_REMOVAL_TRACKING = bool(os.getenv("DISABLE_POST_REMOVAL_TRACKING", False))
 
 # TODO: Remove the lines below with hardcoded versions.
 __VERSION__ = "1.0.0"
@@ -24,8 +31,6 @@ __VERSION__ = "1.0.0"
 ##############################
 
 thirty_minutes = 1800  # seconds
-
-dotenv.load_dotenv()
 
 
 def parse_arguments():
@@ -121,6 +126,21 @@ def archive_completed_posts(cfg: Config) -> None:
             )
 
 
+def track_post_removal(cfg: Config) -> None:
+    """Process the mod log and sync post removals to Blossom."""
+    tor = cfg.r.subreddit("TranscribersOfReddit")
+    for log in tor.mod.log(action="removelink", limit=100):
+        mod = log.mod
+        url = "https://reddit.com" + log.target_permalink
+        create_time = datetime.datetime.fromtimestamp(log.created_utc)
+
+        if mod.name.casefold() in ["tor_archivist", "blossom"]:
+            # Ignore our bots to avoid doing the same thing twice
+            continue
+
+        print(f"Log: {mod} {url} {create_time}")
+
+
 def run(cfg: Config) -> None:
     if not CLEAR_THE_QUEUE_MODE and cfg.sleep_until >= time.time():
         # TODO: if ctq is active, send ctq query parameter to expired endpoint
@@ -137,8 +157,18 @@ def run(cfg: Config) -> None:
 
     logging.info("Starting archiving of old posts...")
 
-    archive_completed_posts(cfg)
-    process_expired_posts(cfg)
+    if not DISABLE_COMPLETED_ARCHIVING:
+        archive_completed_posts(cfg)
+    else:
+        logging.info("Archiving of completed posts is disabled!")
+    if not DISABLE_EXPIRED_ARCHIVING:
+        process_expired_posts(cfg)
+    else:
+        logging.info("Archiving of expired posts is disabled!")
+    if not DISABLE_POST_REMOVAL_TRACKING:
+        track_post_removal(cfg)
+    else:
+        logging.info("Tracking of post removals is disabled!")
 
     if not CLEAR_THE_QUEUE_MODE:
         logging.info("Finished archiving - sleeping!")
