@@ -129,16 +129,40 @@ def archive_completed_posts(cfg: Config) -> None:
 def track_post_removal(cfg: Config) -> None:
     """Process the mod log and sync post removals to Blossom."""
     tor = cfg.r.subreddit("TranscribersOfReddit")
-    for log in tor.mod.log(action="removelink", limit=100):
+    for log in tor.mod.log(action="removelink", limit=20):
         mod = log.mod
-        url = "https://reddit.com" + log.target_permalink
+        tor_url = "https://reddit.com" + log.target_permalink
         create_time = datetime.datetime.fromtimestamp(log.created_utc)
 
         if mod.name.casefold() in ["tor_archivist", "blossom"]:
             # Ignore our bots to avoid doing the same thing twice
             continue
 
-        print(f"Log: {mod} {url} {create_time}")
+        # Fetch the corresponding submission from Blossom
+        removal_response = cfg.blossom.get("submission", params={"tor_url": tor_url})
+        if not removal_response.ok:
+            logging.warning(f"Can't find submission {tor_url} in Blossom!")
+            continue
+        submissions = removal_response.json()["results"]
+        if len(submissions) == 0:
+            logging.warning(f"Can't find submission {tor_url} in Blossom!")
+            continue
+        submission = submissions[0]
+        submission_id = submission["id"]
+
+        if submission["removed_from_queue"]:
+            logging.debug(f"Submission {submission_id} has already been removed.")
+            continue
+
+        removal_response = cfg.blossom.patch(f"submission/{submission_id}/remove")
+        if not removal_response.ok:
+            logging.warning(
+                f"Failed to remove submission {submission_id} ({tor_url}) from Blossom! "
+                f"({removal_response.status_code})"
+            )
+            continue
+
+        logging.info(f"Removed submission {submission_id} ({tor_url}) from Blossom.")
 
 
 def run(cfg: Config) -> None:
