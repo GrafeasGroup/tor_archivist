@@ -138,6 +138,9 @@ def track_post_removal(cfg: Config) -> None:
             # Ignore our bots to avoid doing the same thing twice
             continue
 
+        if create_time <= cfg.last_post_scan_time:
+            continue
+
         # Fetch the corresponding submission from Blossom
         removal_response = cfg.blossom.get("submission", params={"tor_url": tor_url})
         if not removal_response.ok:
@@ -181,6 +184,7 @@ def run(cfg: Config) -> None:
 
     logging.info("Starting archiving of old posts...")
 
+    # Do all the archiving
     if not DISABLE_COMPLETED_ARCHIVING:
         archive_completed_posts(cfg)
     else:
@@ -193,6 +197,9 @@ def run(cfg: Config) -> None:
         track_post_removal(cfg)
     else:
         logging.info("Tracking of post removals is disabled!")
+
+    # Update time
+    cfg.last_post_scan_time = datetime.datetime.now()
 
     if not CLEAR_THE_QUEUE_MODE:
         logging.info("Finished archiving - sleeping!")
