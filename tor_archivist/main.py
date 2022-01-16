@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 import os
 import time
@@ -9,41 +10,49 @@ from blossom_wrapper import BlossomStatus
 
 from tor_archivist.core.config import Config
 from tor_archivist.core.config import config
-from tor_archivist.core.helpers import (
-    run_until_dead, get_id_from_url
-)
+from tor_archivist.core.helpers import run_until_dead, get_id_from_url
 from tor_archivist.core.initialize import build_bot
-from tor_archivist.core.strings import reddit_url
+
+dotenv.load_dotenv()
 
 ##############################
-CLEAR_THE_QUEUE_MODE = bool(os.getenv('CLEAR_THE_QUEUE', ''))
-NOOP_MODE = bool(os.getenv('NOOP_MODE', ''))
-DEBUG_MODE = bool(os.getenv('DEBUG_MODE', ''))
+CLEAR_THE_QUEUE_MODE = bool(os.getenv("CLEAR_THE_QUEUE", ""))
+NOOP_MODE = bool(os.getenv("NOOP_MODE", ""))
+DEBUG_MODE = bool(os.getenv("DEBUG_MODE", ""))
+
+UPDATE_DELAY_SEC = int(os.getenv("UPDATE_DELAY_SEC", 60 * 5))
+
+DISABLE_COMPLETED_ARCHIVING = bool(os.getenv("DISABLE_COMPLETED_ARCHIVING", False))
+DISABLE_EXPIRED_ARCHIVING = bool(os.getenv("DISABLE_EXPIRED_ARCHIVING", False))
+DISABLE_POST_REMOVAL_TRACKING = bool(os.getenv("DISABLE_POST_REMOVAL_TRACKING", False))
 
 # TODO: Remove the lines below with hardcoded versions.
 __VERSION__ = "1.0.0"
-
 ##############################
-
-thirty_minutes = 1800  # seconds
-
-dotenv.load_dotenv()
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(allow_abbrev=False)
-    parser.add_argument('--version', action='version', version=__VERSION__)
-    parser.add_argument('--debug', action='store_true', default=DEBUG_MODE,
-                        help='Puts bot in dev-mode using non-prod credentials')
-    parser.add_argument('--noop', action='store_true', default=NOOP_MODE,
-                        help='Just run the daemon, but take no action (helpful for testing infrastructure changes)')
+    parser.add_argument("--version", action="version", version=__VERSION__)
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=DEBUG_MODE,
+        help="Puts bot in dev-mode using non-prod credentials",
+    )
+    parser.add_argument(
+        "--noop",
+        action="store_true",
+        default=NOOP_MODE,
+        help="Just run the daemon, but take no action (helpful for testing infrastructure changes)",
+    )
 
     return parser.parse_args()
 
 
 def noop(*args: Any) -> None:
     time.sleep(10)
-    logging.info('Loop!')
+    logging.info("Loop!")
 
 
 def process_expired_posts(cfg: Config) -> None:
@@ -55,8 +64,8 @@ def process_expired_posts(cfg: Config) -> None:
 
     if hasattr(response, "data"):
         for submission in response.data:
-            cfg.r.submission(url=submission['tor_url']).mod.remove()
-            cfg.blossom.archive_submission(submission_id=submission['id'])
+            cfg.r.submission(url=submission["tor_url"]).mod.remove()
+            cfg.blossom.archive_submission(submission_id=submission["id"])
             logging.info(
                 f"Archived expired submission {submission['id']} - original_id"
                 f" {submission['original_id']}"
@@ -64,9 +73,11 @@ def process_expired_posts(cfg: Config) -> None:
 
 
 def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
-    response = cfg.blossom.get("transcription/search/", params={"submission_id": submission["id"]})
+    response = cfg.blossom.get(
+        "transcription/search/", params={"submission_id": submission["id"]}
+    )
     for transcription in response.json():
-        if int(get_id_from_url(transcription['author'])) == config.transcribot['id']:
+        if int(get_id_from_url(transcription["author"])) == config.transcribot["id"]:
             continue
         else:
             return transcription
@@ -81,9 +92,9 @@ def archive_completed_posts(cfg: Config) -> None:
 
     if hasattr(response, "data"):
         for submission in response.data:
-            reddit_post = cfg.r.submission(url=submission['tor_url'])
+            reddit_post = cfg.r.submission(url=submission["tor_url"])
             reddit_post.mod.remove()
-            cfg.blossom.archive_submission(submission_id=submission['id'])
+            cfg.blossom.archive_submission(submission_id=submission["id"])
 
             transcription = get_human_transcription(cfg, submission)
 
@@ -96,24 +107,62 @@ def archive_completed_posts(cfg: Config) -> None:
                 # because there's no transcription to link to.
                 continue
 
-            if not transcription.get('url'):
+            if not transcription.get("url"):
                 logging.warning(
                     f"Transcription {transcription['id']} does not have a URL"
                     f" - skipping."
                 )
                 continue
 
-            if "reddit.com" not in transcription['url']:
-                transcription['url'] = f"https://reddit.com{transcription['url']}"
+            if "reddit.com" not in transcription["url"]:
+                transcription["url"] = f"https://reddit.com{transcription['url']}"
 
-            cfg.archive.submit(
-                reddit_post.title,
-                url=transcription['url']
-            )
+            cfg.archive.submit(reddit_post.title, url=transcription["url"])
             logging.info(
                 f"Submission {submission['id']} - original_id"
                 f" {submission['original_id']} - archived!"
             )
+
+
+def track_post_removal(cfg: Config) -> None:
+    """Process the mod log and sync post removals to Blossom."""
+    for log in cfg.tor.mod.log(action="removelink", limit=100):
+        mod = log.mod
+        tor_url = "https://reddit.com" + log.target_permalink
+        create_time = datetime.datetime.fromtimestamp(log.created_utc)
+
+        if mod.name.casefold() in ["tor_archivist", "blossom"]:
+            # Ignore our bots to avoid doing the same thing twice
+            continue
+
+        if create_time <= cfg.last_post_scan_time:
+            continue
+
+        # Fetch the corresponding submission from Blossom
+        removal_response = cfg.blossom.get("submission", params={"tor_url": tor_url})
+        if not removal_response.ok:
+            logging.warning(f"Can't find submission {tor_url} in Blossom!")
+            continue
+        submissions = removal_response.json()["results"]
+        if len(submissions) == 0:
+            logging.warning(f"Can't find submission {tor_url} in Blossom!")
+            continue
+        submission = submissions[0]
+        submission_id = submission["id"]
+
+        if submission["removed_from_queue"]:
+            logging.debug(f"Submission {submission_id} has already been removed.")
+            continue
+
+        removal_response = cfg.blossom.patch(f"submission/{submission_id}/remove")
+        if not removal_response.ok:
+            logging.warning(
+                f"Failed to remove submission {submission_id} ({tor_url}) from Blossom! "
+                f"({removal_response.status_code})"
+            )
+            continue
+
+        logging.info(f"Removed submission {submission_id} ({tor_url}) from Blossom.")
 
 
 def run(cfg: Config) -> None:
@@ -126,27 +175,47 @@ def run(cfg: Config) -> None:
         return
 
     if CLEAR_THE_QUEUE_MODE:
-        logging.info('Clear the Queue Mode is engaged!')
+        logging.info("Clear the Queue Mode is engaged!")
     else:
-        cfg.sleep_until = time.time() + thirty_minutes
+        cfg.sleep_until = time.time() + UPDATE_DELAY_SEC
 
-    logging.info('Starting archiving of old posts...')
+    logging.info("Starting archiving of old posts...")
 
-    archive_completed_posts(cfg)
-    process_expired_posts(cfg)
+    # Do all the archiving
+    if not DISABLE_COMPLETED_ARCHIVING:
+        archive_completed_posts(cfg)
+    else:
+        logging.info("Archiving of completed posts is disabled!")
+    if not DISABLE_EXPIRED_ARCHIVING:
+        process_expired_posts(cfg)
+    else:
+        logging.info("Archiving of expired posts is disabled!")
+    if not DISABLE_POST_REMOVAL_TRACKING:
+        track_post_removal(cfg)
+    else:
+        logging.info("Tracking of post removals is disabled!")
+
+    # Update time
+    cfg.last_post_scan_time = datetime.datetime.now()
 
     if not CLEAR_THE_QUEUE_MODE:
-        logging.info('Finished archiving - sleeping!')
+        logging.info("Finished archiving - sleeping!")
+
 
 def main():
     opt = parse_arguments()
 
     config.debug_mode = opt.debug
-    bot_name = 'debug' if config.debug_mode else 'tor_archivist'
+    bot_name = "debug" if config.debug_mode else "tor_archivist"
 
     build_bot(bot_name, __VERSION__)
 
-    config.archive = config.r.subreddit(os.environ.get('ARCHIVE_SUBREDDIT', 'ToR_Archive'))
+    config.archive = config.r.subreddit(
+        os.environ.get("ARCHIVE_SUBREDDIT", "ToR_Archive")
+    )
+    config.tor = config.r.subreddit(
+        os.environ.get("TOR_SUBREDDIT", "TranscribersOfReddit")
+    )
 
     # jumpstart the clock -- allow running immediately after starting.
     config.sleep_until = 0
@@ -156,5 +225,5 @@ def main():
         run_until_dead(run)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -10,8 +10,8 @@ from tor_archivist.core.helpers import log_header
 
 
 def has_tor_environment_vars():
-    for var in ('username', 'password', 'client_id', 'client_secret', 'user_agent'):
-        if f'praw_{var}' not in os.environ:
+    for var in ("username", "password", "client_id", "client_secret", "user_agent"):
+        if f"praw_{var}" not in os.environ:
             return False
 
     return True
@@ -29,10 +29,10 @@ def configure_tor(config):
     :return: the Subreddit object for the chosen subreddit.
     """
     if config.debug_mode:
-        tor = config.r.subreddit('ModsOfToR')
+        tor = config.r.subreddit("ModsOfToR")
     else:
         # normal operation, our primary subreddit
-        tor = config.r.subreddit('transcribersofreddit')
+        tor = config.r.subreddit("transcribersofreddit")
 
     return tor
 
@@ -40,20 +40,20 @@ def configure_tor(config):
 def configure_logging(config):
     logging.basicConfig(
         level=logging.INFO,
-        format='%(levelname)s | %(funcName)s | %(message)s',
-        datefmt='%Y-%m-%dT%H:%M:%S',
+        format="%(levelname)s | %(funcName)s | %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S",
     )
 
     # will intercept anything error level or above
     if config.bugsnag_api_key:
         bs_handler = BugsnagHandler()
         bs_handler.setLevel(logging.ERROR)
-        logging.getLogger('').addHandler(bs_handler)
-        logging.info('Bugsnag enabled!')
+        logging.getLogger("").addHandler(bs_handler)
+        logging.info("Bugsnag enabled!")
     else:
-        logging.info('Not running with Bugsnag!')
+        logging.info("Not running with Bugsnag!")
 
-    log_header('Starting!')
+    log_header("Starting!")
 
 
 def get_blossom_connection():
@@ -67,14 +67,14 @@ def get_blossom_connection():
 def get_user_info(config, username: str = None) -> None:
     if not username:
         username = "tor_archivist"
-    return config.blossom.get(
-        "volunteer/", params={"username": username}
-    ).json()["results"][0]
+    return config.blossom.get("volunteer/", params={"username": username}).json()[
+        "results"
+    ][0]
 
 
 def build_bot(
-        name,
-        version,
+    name,
+    version,
 ):
     """
     Shortcut for setting up a bot instance. Runs all configuration and returns
@@ -121,4 +121,4 @@ def build_bot(
     config.me = get_user_info(config)
     config.transcribot = get_user_info(config, "transcribot")
 
-    logging.info('Bot built and initialized!')
+    logging.info("Bot built and initialized!")
