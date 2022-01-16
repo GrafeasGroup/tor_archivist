@@ -90,7 +90,7 @@ def signal_handler(signal, frame):
         sys.exit(1)
 
     logging.info(
-        "\rUser triggered command line shutdown. Will terminate after current " "loop."
+        "\rUser triggered command line shutdown. Will terminate after current loop."
     )
     running = False
 
