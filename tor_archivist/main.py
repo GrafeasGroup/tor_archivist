@@ -140,11 +140,11 @@ def track_post_removal(cfg: Config) -> None:
             continue
 
         # Fetch the corresponding submission from Blossom
-        removal_response = cfg.blossom.get("submission", params={"tor_url": tor_url})
-        if not removal_response.ok:
+        submission_response = cfg.blossom.get("submission", params={"tor_url": tor_url})
+        if not submission_response.ok:
             logging.warning(f"Can't find submission {tor_url} in Blossom!")
             continue
-        submissions = removal_response.json()["results"]
+        submissions = submission_response.json()["results"]
         if len(submissions) == 0:
             logging.warning(f"Can't find submission {tor_url} in Blossom!")
             continue
@@ -169,7 +169,58 @@ def track_post_removal(cfg: Config) -> None:
 def track_post_reports(cfg: Config) -> None:
     """Process the mod queue and sync post reports to Blossom."""
     logging.info("Tracking post reports!")
-    pass
+    for submission in cfg.tor.mod.modqueue(only="submissions", limit=None):
+        # Check if the report has already been handled
+        if (
+            submission.removed
+            or submission.ignore_reports
+            or submission.approved_at_utc
+        ):
+            continue
+
+        # Determine the report reason
+        reason = (
+            submission.mod_reports[0][0]
+            if len(submission.mod_reports) > 0
+            else submission.user_reports[0][0]
+            if len(submission.user_reports) > 0
+            else None
+        )
+        if reason is None:
+            continue
+
+        tor_url = "https://reddit.com" + submission.permalink
+
+        # Fetch the corresponding submission from Blossom
+        submission_response = cfg.blossom.get("submission", params={"tor_url": tor_url})
+        if not submission_response.ok:
+            logging.warning(f"Can't find submission {tor_url} in Blossom!")
+            continue
+        submissions = submission_response.json()["results"]
+        if len(submissions) == 0:
+            logging.warning(f"Can't find submission {tor_url} in Blossom!")
+            continue
+        submission = submissions[0]
+        submission_id = submission["id"]
+
+        if submission["removed_from_queue"]:
+            logging.debug(f"Submission {submission_id} has already been removed.")
+            continue
+
+        # TODO: Handle NSFW and removed posts automatically
+        report_response = cfg.blossom.patch(
+            f"submission/{submission_id}/report", data={"reason": reason}
+        )
+        if not report_response.ok:
+            logging.warning(
+                f"Failed to report submission {submission_id} ({tor_url}) to Blossom! "
+                f"({report_response.status_code})"
+            )
+            continue
+
+        # TODO: Don't log this if the post has already been reported on Blosssom
+        # We might need to change the Blossom response in this case
+        logging.info(f"Reported submission {submission_id} ({tor_url}) to Blossom.")
 
 
 def run(cfg: Config) -> None:
