@@ -25,6 +25,7 @@ UPDATE_DELAY_SEC = int(os.getenv("UPDATE_DELAY_SEC", 60 * 5))
 DISABLE_COMPLETED_ARCHIVING = bool(os.getenv("DISABLE_COMPLETED_ARCHIVING", False))
 DISABLE_EXPIRED_ARCHIVING = bool(os.getenv("DISABLE_EXPIRED_ARCHIVING", False))
 DISABLE_POST_REMOVAL_TRACKING = bool(os.getenv("DISABLE_POST_REMOVAL_TRACKING", False))
+DISABLE_POST_REPORT_TRACKING = bool(os.getenv("DISABLE_POST_REPORT_TRACKING", False))
 
 # TODO: Remove the lines below with hardcoded versions.
 __VERSION__ = "1.0.0"
@@ -165,6 +166,12 @@ def track_post_removal(cfg: Config) -> None:
         logging.info(f"Removed submission {submission_id} ({tor_url}) from Blossom.")
 
 
+def track_post_reports(cfg: Config) -> None:
+    """Process the mod queue and sync post reports to Blossom."""
+    logging.info("Tracking post reports!")
+    pass
+
+
 def run(cfg: Config) -> None:
     if not CLEAR_THE_QUEUE_MODE and cfg.sleep_until >= time.time():
         # TODO: if ctq is active, send ctq query parameter to expired endpoint
@@ -194,6 +201,10 @@ def run(cfg: Config) -> None:
         track_post_removal(cfg)
     else:
         logging.info("Tracking of post removals is disabled!")
+    if not DISABLE_POST_REPORT_TRACKING:
+        track_post_reports(cfg)
+    else:
+        logging.info("Tracking of post reports is disabled!")
 
     # Update time
     cfg.last_post_scan_time = datetime.datetime.now()
