@@ -87,6 +87,10 @@ class Config(object):
     # the main subreddit. Default is r/TranscribersOfReddit
     tor: Optional[Subreddit] = None
 
+    # the current step number for the archiving runs
+    # we can skip some steps if we want faster report syncing
+    archive_run_step = 99999
+
 
 try:
     Config.bugsnag_api_key = open("bugsnag.key").readline().strip()
