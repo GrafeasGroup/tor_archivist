@@ -22,7 +22,7 @@ NOOP_MODE = bool(os.getenv("NOOP_MODE", ""))
 DEBUG_MODE = bool(os.getenv("DEBUG_MODE", ""))
 
 UPDATE_DELAY_SEC = int(os.getenv("UPDATE_DELAY_SEC", 60))
-ARCHIVING_RUN_STEPS = bool(os.getenv("ARCHIVING_RUN_STEPS", 10))
+ARCHIVING_RUN_STEPS = int(os.getenv("ARCHIVING_RUN_STEPS", 10))
 
 DISABLE_COMPLETED_ARCHIVING = bool(os.getenv("DISABLE_COMPLETED_ARCHIVING", False))
 DISABLE_EXPIRED_ARCHIVING = bool(os.getenv("DISABLE_EXPIRED_ARCHIVING", False))
@@ -157,7 +157,9 @@ def run(cfg: Config) -> None:
         # Reset counter
         cfg.archive_run_step = 0
     else:
-        logging.info("Skipping archiving step")
+        logging.info(
+            f"Skipping archiving step, {ARCHIVING_RUN_STEPS - cfg.archive_run_step} remaining"
+        )
     # Queue sync stuff
     if not DISABLE_POST_REMOVAL_TRACKING:
         track_post_removal(cfg)
