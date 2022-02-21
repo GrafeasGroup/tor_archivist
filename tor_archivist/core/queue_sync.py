@@ -99,6 +99,23 @@ def _nsfw_on_blossom(cfg: Config, b_submission: Dict) -> None:
         )
 
 
+def _report_on_blossom(cfg: Config, b_submission: Dict, reason: str) -> None:
+    """Report the submission on Blossom."""
+    b_id = b_submission["id"]
+    tor_url = b_submission["tor_url"]
+
+    report_response = cfg.blossom.patch(
+        f"submission/{b_id}/report", data={"reason": reason}
+    )
+    if report_response.ok:
+        logging.info(f"Reported submission {b_id} ({tor_url}) to Blossom.")
+    else:
+        logging.warning(
+            f"Failed to report submission {b_id} ({tor_url}) to Blossom! "
+            f"({report_response.status_code})"
+        )
+
+
 def _auto_report_handling(
     cfg: Config, r_submission: Any, b_submission: Dict, reason: str
 ) -> bool:
@@ -194,14 +211,4 @@ def track_post_reports(cfg: Config) -> None:
         if _auto_report_handling(cfg, r_submission, b_submission, reason):
             continue
 
-        report_response = cfg.blossom.patch(
-            f"submission/{b_id}/report", data={"reason": reason}
-        )
-        if not report_response.ok:
-            logging.warning(
-                f"Failed to report submission {b_id} ({tor_url}) to Blossom! "
-                f"({report_response.status_code})"
-            )
-            continue
-
-        logging.info(f"Reported submission {b_id} ({tor_url}) to Blossom.")
+        _report_on_blossom(cfg, b_submission, reason)
