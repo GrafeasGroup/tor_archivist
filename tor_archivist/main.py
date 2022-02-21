@@ -66,7 +66,7 @@ def process_expired_posts(cfg: Config) -> None:
 
     if hasattr(response, "data"):
         for submission in response.data:
-            cfg.r.submission(url=submission["tor_url"]).mod.remove()
+            cfg.reddit.submission(url=submission["tor_url"]).mod.remove()
             cfg.blossom.archive_submission(submission_id=submission["id"])
             logging.info(
                 f"Archived expired submission {submission['id']} - original_id"
@@ -94,7 +94,7 @@ def archive_completed_posts(cfg: Config) -> None:
 
     if hasattr(response, "data"):
         for submission in response.data:
-            reddit_post = cfg.r.submission(url=submission["tor_url"])
+            reddit_post = cfg.reddit.submission(url=submission["tor_url"])
             reddit_post.mod.remove()
             cfg.blossom.archive_submission(submission_id=submission["id"])
 
@@ -175,10 +175,10 @@ def main():
 
     build_bot(bot_name, __VERSION__)
 
-    config.archive = config.r.subreddit(
+    config.archive = config.reddit.subreddit(
         os.environ.get("ARCHIVE_SUBREDDIT", "ToR_Archive")
     )
-    config.tor = config.r.subreddit(
+    config.tor = config.reddit.subreddit(
         os.environ.get("TOR_SUBREDDIT", "TranscribersOfReddit")
     )
 

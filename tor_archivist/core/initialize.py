@@ -29,10 +29,10 @@ def configure_tor(config):
     :return: the Subreddit object for the chosen subreddit.
     """
     if config.debug_mode:
-        tor = config.r.subreddit("ModsOfToR")
+        tor = config.reddit.subreddit("ModsOfToR")
     else:
         # normal operation, our primary subreddit
-        tor = config.r.subreddit("transcribersofreddit")
+        tor = config.reddit.subreddit("transcribersofreddit")
 
     return tor
 
@@ -94,9 +94,9 @@ def build_bot(
     """
 
     if has_tor_environment_vars():
-        config.r = Reddit()
+        config.reddit = Reddit()
     else:
-        config.r = Reddit(name)
+        config.reddit = Reddit(name)
 
     # PRAW 7 has a weird behavior with the flag `validate_on_submit`. If we
     # submit something without touching this flag at all (e.g. the old way)
@@ -111,7 +111,7 @@ def build_bot(
     # and when PRAW finally does remove this attribute, we'll just be setting
     # a useless attribute and it shouldn't hurt anything. Should definitely
     # check on this again around PRAW 8, though.
-    config.r.validate_on_submit = True
+    config.reddit.validate_on_submit = True
 
     config.name = name
     config.bot_version = version
