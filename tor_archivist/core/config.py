@@ -1,7 +1,12 @@
 import datetime
 import os
+from typing import Optional
 
 import pkg_resources
+from blossom_wrapper import BlossomAPI
+
+from praw import Reddit
+from praw.models import Subreddit
 
 # Load configuration regardless of if bugsnag is setup correctly
 try:
@@ -68,19 +73,19 @@ class Config(object):
     debug_mode = False
 
     # Name of the bot
-    name = None
-    bot_version = "0.0.0"  # this should get overwritten by the bot process
+    name: Optional[str] = None
+    bot_version: str = "0.0.0"  # this should get overwritten by the bot process
 
-    last_post_scan_time = datetime.datetime(1970, 1, 1, 1, 1, 1)
+    last_post_scan_time: datetime.datetime = datetime.datetime(1970, 1, 1, 1, 1, 1)
 
     # to be overwritten later with blossom-wrapper
-    blossom = None
+    blossom: Optional[BlossomAPI] = None
     # to be overwritten with the Reddit connection
-    r = None
+    reddit: Optional[Reddit] = None
     # the subreddit of the archives. Default is r/ToR_Archive
-    archive = None
+    archive: Optional[Subreddit] = None
     # the main subreddit. Default is r/TranscribersOfReddit
-    tor = None
+    tor: Optional[Subreddit] = None
 
 
 try:
