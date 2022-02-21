@@ -21,7 +21,8 @@ CLEAR_THE_QUEUE_MODE = bool(os.getenv("CLEAR_THE_QUEUE", ""))
 NOOP_MODE = bool(os.getenv("NOOP_MODE", ""))
 DEBUG_MODE = bool(os.getenv("DEBUG_MODE", ""))
 
-UPDATE_DELAY_SEC = int(os.getenv("UPDATE_DELAY_SEC", 60 * 5))
+UPDATE_DELAY_SEC = int(os.getenv("UPDATE_DELAY_SEC", 60))
+ARCHIVING_RUN_STEPS = bool(os.getenv("ARCHIVING_RUN_STEPS", 10))
 
 DISABLE_COMPLETED_ARCHIVING = bool(os.getenv("DISABLE_COMPLETED_ARCHIVING", False))
 DISABLE_EXPIRED_ARCHIVING = bool(os.getenv("DISABLE_EXPIRED_ARCHIVING", False))
@@ -142,15 +143,22 @@ def run(cfg: Config) -> None:
 
     logging.info("Starting archiving of old posts...")
 
-    # Do all the archiving
-    if not DISABLE_COMPLETED_ARCHIVING:
-        archive_completed_posts(cfg)
+    # Skip every couple archiving runs for better performance
+    # The queue sync stuff is more important to run frequently
+    if cfg.archive_run_step >= ARCHIVING_RUN_STEPS:
+        if not DISABLE_COMPLETED_ARCHIVING:
+            archive_completed_posts(cfg)
+        else:
+            logging.info("Archiving of completed posts is disabled!")
+        if not DISABLE_EXPIRED_ARCHIVING:
+            process_expired_posts(cfg)
+        else:
+            logging.info("Archiving of expired posts is disabled!")
+        # Reset counter
+        cfg.archive_run_step = 0
     else:
-        logging.info("Archiving of completed posts is disabled!")
-    if not DISABLE_EXPIRED_ARCHIVING:
-        process_expired_posts(cfg)
-    else:
-        logging.info("Archiving of expired posts is disabled!")
+        logging.info("Skipping archiving step")
+    # Queue sync stuff
     if not DISABLE_POST_REMOVAL_TRACKING:
         track_post_removal(cfg)
     else:
@@ -165,6 +173,9 @@ def run(cfg: Config) -> None:
 
     if not CLEAR_THE_QUEUE_MODE:
         logging.info("Finished archiving - sleeping!")
+
+    # Increment run step
+    cfg.archive_run_step += 1
 
 
 def main():
