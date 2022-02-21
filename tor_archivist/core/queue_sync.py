@@ -6,6 +6,9 @@ from typing import Any, Optional, Dict
 from tor_archivist.core.config import Config
 
 
+NSFW_POST_REPORT_REASON = "Post should be marked as NSFW"
+
+
 def _get_report_reason(r_submission: Any) -> Optional[str]:
     """Get the report reason for a Reddit submission."""
     return (
@@ -56,6 +59,82 @@ def _report_handled_blossom(b_submission: Dict) -> bool:
     )
 
 
+def _remove_on_reddit(r_submission: Any) -> None:
+    """Remove the given submission from Reddit."""
+    r_submission.mod.remove()
+
+
+def _remove_on_blossom(cfg: Config, b_submission: Dict) -> None:
+    """Remove the given submission from Blossom."""
+    b_id = b_submission["id"]
+    tor_url = b_submission["tor_url"]
+
+    removal_response = cfg.blossom.patch(f"submission/{b_id}/remove")
+    if removal_response.ok:
+        logging.info(f"Removed submission {b_id} ({tor_url}) from Blossom.")
+    else:
+        logging.warning(
+            f"Failed to remove submission {b_id} ({tor_url}) from Blossom! "
+            f"({removal_response.status_code})"
+        )
+
+
+def _nsfw_on_reddit(r_submission: Any) -> None:
+    """Mark the submission as NSFW on Reddit."""
+    r_submission.mod.nsfw()
+
+
+def _nsfw_on_blossom(cfg: Config, b_submission: Dict) -> None:
+    """Mark the submission as NSFW on Blossom."""
+    b_id = b_submission["id"]
+    tor_url = b_submission["tor_url"]
+
+    nsfw_response = cfg.blossom.patch(f"submission/{b_id}/nsfw")
+    if nsfw_response.ok:
+        logging.info(f"Submission {b_id} ({tor_url}) marked as NSFW on Blossom.")
+    else:
+        logging.warning(
+            f"Failed to mark submission {b_id} ({tor_url}) as NSFW on Blossom! "
+            f"({nsfw_response.status_code})"
+        )
+
+
+def _auto_report_handling(
+    cfg: Config, r_submission: Any, b_submission: Dict, reason: str
+) -> bool:
+    """Check if the report can be handled automatically.
+
+    This is possible in the following cases:
+    - The post has been removed on the partner sub. We can just delete remove
+      it from the queue too.
+    - The post has been reported as NSFW. We can check if the post has
+      been marked as NSFW on the partner sub. If yes, we mark it as
+      NSFW on both Reddit and Blossom. Otherwise, we ignore the report.
+
+    :returns: True if the report has been handled automatically, else False.
+    """
+    partner_submission = cfg.reddit.submission(url=r_submission.url)
+
+    # Check if the post has been removed on the partner sub
+    if partner_submission.removed_by_category:
+        # Removed on the partner sub, it's safe to remove
+        _remove_on_reddit(r_submission)
+        _remove_on_blossom(cfg, b_submission)
+        return True
+
+    if reason == NSFW_POST_REPORT_REASON:
+        # Check if the post is marked as NSFW on the partner sub
+        if partner_submission.over_18:
+            _nsfw_on_reddit(r_submission)
+            _nsfw_on_blossom(cfg, b_submission)
+
+        # Otherwise ignore the report
+        # TODO: Do we really wanna ignore?
+        return True
+
+    return False
+
+
 def track_post_removal(cfg: Config) -> None:
     """Process the mod log and sync post removals to Blossom."""
     for log in cfg.tor.mod.log(action="removelink", limit=100):
@@ -81,15 +160,7 @@ def track_post_removal(cfg: Config) -> None:
             logging.debug(f"Submission {b_submission_id} has already been removed.")
             continue
 
-        removal_response = cfg.blossom.patch(f"submission/{b_submission_id}/remove")
-        if not removal_response.ok:
-            logging.warning(
-                f"Failed to remove submission {b_submission_id} ({tor_url}) from Blossom! "
-                f"({removal_response.status_code})"
-            )
-            continue
-
-        logging.info(f"Removed submission {b_submission_id} ({tor_url}) from Blossom.")
+        _remove_on_blossom(cfg, b_submission)
 
 
 def track_post_reports(cfg: Config) -> None:
@@ -118,7 +189,11 @@ def track_post_reports(cfg: Config) -> None:
             logging.debug(f"Submission {b_id} has already been removed.")
             continue
 
-        # TODO: Handle NSFW and removed posts automatically
+        # Handle the report automatically if possible
+        # In that case we don't need to send it to Blossom
+        if _auto_report_handling(cfg, r_submission, b_submission, reason):
+            continue
+
         report_response = cfg.blossom.patch(
             f"submission/{b_id}/report", data={"reason": reason}
         )
