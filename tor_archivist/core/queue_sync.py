@@ -36,7 +36,8 @@ def _get_blossom_submission(cfg: Config, tor_url: str) -> Optional[Dict]:
     if len(submissions) == 0:
         return None
 
-    return submissions[0]
+    submission = submissions[0]
+    return submission
 
 
 def _report_handled_reddit(r_submission: Any) -> bool:
@@ -51,11 +52,11 @@ def _report_handled_reddit(r_submission: Any) -> bool:
 def _report_handled_blossom(b_submission: Dict) -> bool:
     """Determine if the report is already handled on Blossom."""
     return (
-        b_submission["removed_from_queue"]
+        b_submission.get("removed_from_queue")
         # These are not exposed to the API yet
         # But it doesn't hurt to leave them in and it'll work if we ever expose them
-        or b_submission["approved"]
-        or b_submission["report_reason"]
+        or b_submission.get("approved")
+        or b_submission.get("report_reason")
     )
 
 
