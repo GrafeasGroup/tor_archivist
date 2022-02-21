@@ -80,6 +80,27 @@ def _remove_on_blossom(cfg: Config, b_submission: Dict) -> None:
         )
 
 
+def _approve_on_reddit(r_submission: Any) -> None:
+    """Approve the given submission on Reddit."""
+    r_submission.mod.approve()
+    r_submission.mod.ignore_reports()
+
+
+def _approve_on_blossom(cfg: Config, b_submission: Dict) -> None:
+    """Approve the given submission on Blossom."""
+    b_id = b_submission["id"]
+    tor_url = b_submission["tor_url"]
+
+    approve_response = cfg.blossom.patch(f"submission/{b_id}/approve")
+    if approve_response.ok:
+        logging.info(f"Approved submission {b_id} ({tor_url}) on Blossom.")
+    else:
+        logging.warning(
+            f"Failed to approve submission {b_id} ({tor_url}) on Blossom! "
+            f"({approve_response.status_code})"
+        )
+
+
 def _nsfw_on_reddit(r_submission: Any) -> None:
     """Mark the submission as NSFW on Reddit."""
     r_submission.mod.nsfw()
@@ -148,6 +169,9 @@ def _auto_report_handling(
 
     if reason == NSFW_POST_REPORT_REASON:
         # We already handled NSFW reports
+        # We still need to approve the submission to remove the item from mod queue
+        _approve_on_reddit(r_submission)
+        _approve_on_blossom(cfg, b_submission)
         return True
 
     return False
@@ -195,6 +219,10 @@ def track_post_reports(cfg: Config) -> None:
             continue
 
         tor_url = "https://reddit.com" + r_submission.permalink
+        create_time = datetime.datetime.fromtimestamp(r_submission.created_utc)
+
+        if create_time <= cfg.last_post_scan_time:
+            continue
 
         # Fetch the corresponding submission from Blossom
         b_submission = _get_blossom_submission(cfg, tor_url)
