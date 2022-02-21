@@ -115,21 +115,21 @@ def _auto_report_handling(
     """
     partner_submission = cfg.reddit.submission(url=r_submission.url)
 
+    # Check if the post is marked as NSFW on the partner sub
+    if partner_submission.over_18:
+        _nsfw_on_reddit(r_submission)
+        _nsfw_on_blossom(cfg, b_submission)
+
     # Check if the post has been removed on the partner sub
     if partner_submission.removed_by_category:
         # Removed on the partner sub, it's safe to remove
         _remove_on_reddit(r_submission)
         _remove_on_blossom(cfg, b_submission)
+        # We can ignore the report
         return True
 
     if reason == NSFW_POST_REPORT_REASON:
-        # Check if the post is marked as NSFW on the partner sub
-        if partner_submission.over_18:
-            _nsfw_on_reddit(r_submission)
-            _nsfw_on_blossom(cfg, b_submission)
-
-        # Otherwise ignore the report
-        # TODO: Do we really wanna ignore?
+        # We already handled NSFW reports
         return True
 
     return False
