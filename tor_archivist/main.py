@@ -67,12 +67,14 @@ def process_expired_posts(cfg: Config) -> None:
 
     if hasattr(response, "data"):
         for submission in response.data:
-            cfg.reddit.submission(url=submission["tor_url"]).mod.remove()
-            cfg.blossom.archive_submission(submission_id=submission["id"])
-            logging.info(
-                f"Archived expired submission {submission['id']} - original_id"
-                f" {submission['original_id']}"
-            )
+            # Only archived if it hasn't been removed already
+            if not submission.removed_by_category:
+                cfg.reddit.submission(url=submission["tor_url"]).mod.remove()
+                cfg.blossom.archive_submission(submission_id=submission["id"])
+                logging.info(
+                    f"Archived expired submission {submission['id']} - original_id"
+                    f" {submission['original_id']}"
+                )
 
 
 def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
