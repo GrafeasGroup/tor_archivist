@@ -66,14 +66,16 @@ def process_expired_posts(cfg: Config) -> None:
         return
 
     if hasattr(response, "data"):
-        for submission in response.data:
+        for b_submission in response.data:
             # Only archived if it hasn't been removed already
-            if not submission.removed_by_category:
-                cfg.reddit.submission(url=submission["tor_url"]).mod.remove()
-                cfg.blossom.archive_submission(submission_id=submission["id"])
+            r_submission = cfg.reddit.submission(url=b_submission["tor_url"])
+
+            if not r_submission.removed_by_category:
+                r_submission.mod.remove()
+                cfg.blossom.archive_submission(submission_id=b_submission["id"])
                 logging.info(
-                    f"Archived expired submission {submission['id']} - original_id"
-                    f" {submission['original_id']}"
+                    f"Archived expired submission {b_submission['id']} - original_id"
+                    f" {b_submission['original_id']}"
                 )
 
 
