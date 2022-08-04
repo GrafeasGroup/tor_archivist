@@ -145,11 +145,10 @@ def run(cfg: Config) -> None:
     else:
         cfg.sleep_until = time.time() + UPDATE_DELAY_SEC
 
-    logging.info("Starting archiving of old posts...")
-
     # Skip every couple archiving runs for better performance
     # The queue sync stuff is more important to run frequently
     if cfg.archive_run_step >= ARCHIVING_RUN_STEPS:
+        logging.info("Starting archiving of old posts...")
         if not DISABLE_COMPLETED_ARCHIVING:
             archive_completed_posts(cfg)
         else:
@@ -173,9 +172,6 @@ def run(cfg: Config) -> None:
         track_post_reports(cfg)
     else:
         logging.info("Tracking of post reports is disabled!")
-
-    # Update time
-    cfg.last_post_scan_time = datetime.datetime.now()
 
     if not CLEAR_THE_QUEUE_MODE:
         logging.info("Finished archiving - sleeping!")
