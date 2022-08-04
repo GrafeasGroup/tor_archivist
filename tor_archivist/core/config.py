@@ -1,4 +1,3 @@
-import datetime
 import os
 from typing import Optional
 
@@ -9,6 +8,8 @@ from praw import Reddit
 from praw.models import Subreddit
 
 # Load configuration regardless of if bugsnag is setup correctly
+from tor_archivist import ARCHIVING_RUN_STEPS
+
 try:
     import bugsnag
 except ImportError:
@@ -87,7 +88,7 @@ class Config(object):
 
     # the current step number for the archiving runs
     # we can skip some steps if we want faster report syncing
-    archive_run_step = 99999
+    archive_run_step = ARCHIVING_RUN_STEPS
 
 
 try:

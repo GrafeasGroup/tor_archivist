@@ -185,6 +185,7 @@ def _auto_report_handling(
 
 def track_post_removal(cfg: Config) -> None:
     """Process the mod log and sync post removals to Blossom."""
+    logging.info("Tracking post removals!")
     for log in cfg.tor.mod.log(action="removelink", limit=100):
         mod = log.mod
         tor_url = "https://reddit.com" + log.target_permalink
@@ -211,16 +212,13 @@ def track_post_reports(cfg: Config) -> None:
     """Process the mod queue and sync post reports to Blossom."""
     logging.info("Tracking post reports!")
     for r_submission in cfg.tor.mod.modqueue(only="submissions", limit=None):
-        print(f"Submission {r_submission.url}...")
         # Check if the report has already been handled
         if _report_handled_reddit(r_submission):
-            print("Already handled")
             continue
 
         # Determine the report reason
         reason = _get_report_reason(r_submission)
         if reason is None:
-            print("No report reason")
             continue
 
         tor_url = "https://reddit.com" + r_submission.permalink
