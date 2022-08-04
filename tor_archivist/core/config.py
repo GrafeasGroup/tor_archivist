@@ -76,8 +76,6 @@ class Config(object):
     name: Optional[str] = None
     bot_version: str = "0.0.0"  # this should get overwritten by the bot process
 
-    last_post_scan_time: datetime.datetime = datetime.datetime(1970, 1, 1, 1, 1, 1)
-
     # to be overwritten later with blossom-wrapper
     blossom: Optional[BlossomAPI] = None
     # to be overwritten with the Reddit connection

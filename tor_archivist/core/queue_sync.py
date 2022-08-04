@@ -7,6 +7,7 @@ from tor_archivist.core.config import Config
 
 
 NSFW_POST_REPORT_REASON = "Post should be marked as NSFW"
+BOT_USERNAMES = ["tor_archivist", "blossom", "tor_tester"]
 
 
 def _get_report_reason(r_submission: Any) -> Optional[str]:
@@ -63,6 +64,7 @@ def _report_handled_blossom(b_submission: Dict) -> bool:
 def _remove_on_reddit(r_submission: Any) -> None:
     """Remove the given submission from Reddit."""
     r_submission.mod.remove()
+    logging.info(f"Removed submission {r_submission.url} from Reddit.")
 
 
 def _remove_on_blossom(cfg: Config, b_submission: Dict) -> None:
@@ -84,6 +86,7 @@ def _approve_on_reddit(r_submission: Any) -> None:
     """Approve the given submission on Reddit."""
     r_submission.mod.approve()
     r_submission.mod.ignore_reports()
+    logging.info(f"Approved submission {r_submission.url} on Blossom.")
 
 
 def _approve_on_blossom(cfg: Config, b_submission: Dict) -> None:
@@ -104,6 +107,7 @@ def _approve_on_blossom(cfg: Config, b_submission: Dict) -> None:
 def _nsfw_on_reddit(r_submission: Any) -> None:
     """Mark the submission as NSFW on Reddit."""
     r_submission.mod.nsfw()
+    logging.info(f"Submission {r_submission.url} marked as NSFW on Reddit.")
 
 
 def _nsfw_on_blossom(cfg: Config, b_submission: Dict) -> None:
@@ -184,13 +188,9 @@ def track_post_removal(cfg: Config) -> None:
     for log in cfg.tor.mod.log(action="removelink", limit=100):
         mod = log.mod
         tor_url = "https://reddit.com" + log.target_permalink
-        create_time = datetime.datetime.fromtimestamp(log.created_utc)
 
-        if mod.name.casefold() in ["tor_archivist", "blossom"]:
+        if mod.name.casefold() in BOT_USERNAMES:
             # Ignore our bots to avoid doing the same thing twice
-            continue
-
-        if create_time <= cfg.last_post_scan_time:
             continue
 
         # Fetch the corresponding submission from Blossom
@@ -211,20 +211,19 @@ def track_post_reports(cfg: Config) -> None:
     """Process the mod queue and sync post reports to Blossom."""
     logging.info("Tracking post reports!")
     for r_submission in cfg.tor.mod.modqueue(only="submissions", limit=None):
+        print(f"Submission {r_submission.url}...")
         # Check if the report has already been handled
         if _report_handled_reddit(r_submission):
+            print("Already handled")
             continue
 
         # Determine the report reason
         reason = _get_report_reason(r_submission)
         if reason is None:
+            print("No report reason")
             continue
 
         tor_url = "https://reddit.com" + r_submission.permalink
-        create_time = datetime.datetime.fromtimestamp(r_submission.created_utc)
-
-        if create_time <= cfg.last_post_scan_time:
-            continue
 
         # Fetch the corresponding submission from Blossom
         b_submission = _get_blossom_submission(cfg, tor_url)
