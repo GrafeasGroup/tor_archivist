@@ -86,7 +86,7 @@ def _approve_on_reddit(r_submission: Any) -> None:
     """Approve the given submission on Reddit."""
     r_submission.mod.approve()
     r_submission.mod.ignore_reports()
-    logging.info(f"Approved submission {r_submission.url} on Blossom.")
+    logging.info(f"Approved submission {r_submission.url} on Reddit.")
 
 
 def _approve_on_blossom(cfg: Config, b_submission: Dict) -> None:

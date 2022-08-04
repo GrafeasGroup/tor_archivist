@@ -7,9 +7,9 @@ from blossom_wrapper import BlossomAPI
 from praw import Reddit
 from praw.models import Subreddit
 
-# Load configuration regardless of if bugsnag is setup correctly
 from tor_archivist import ARCHIVING_RUN_STEPS
 
+# Load configuration regardless of if bugsnag is setup correctly
 try:
     import bugsnag
 except ImportError:

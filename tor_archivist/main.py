@@ -7,9 +7,17 @@ from typing import Any, Dict
 import dotenv
 from blossom_wrapper import BlossomStatus
 
-from tor_archivist import CLEAR_THE_QUEUE_MODE, NOOP_MODE, DEBUG_MODE, UPDATE_DELAY_SEC, ARCHIVING_RUN_STEPS, \
-    DISABLE_COMPLETED_ARCHIVING, DISABLE_EXPIRED_ARCHIVING, DISABLE_POST_REMOVAL_TRACKING, DISABLE_POST_REPORT_TRACKING, \
-    __VERSION__
+from tor_archivist import (
+    CLEAR_THE_QUEUE_MODE,
+    NOOP_MODE,
+    DEBUG_MODE,
+    UPDATE_DELAY_SEC,
+    ARCHIVING_RUN_STEPS,
+    DISABLE_COMPLETED_ARCHIVING,
+    DISABLE_EXPIRED_ARCHIVING,
+    DISABLE_POST_REMOVAL_TRACKING,
+    DISABLE_POST_REPORT_TRACKING,
+)
 from tor_archivist.core.config import Config
 from tor_archivist.core.config import config
 from tor_archivist.core.helpers import run_until_dead, get_id_from_url
