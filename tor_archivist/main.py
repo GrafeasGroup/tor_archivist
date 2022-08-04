@@ -1,5 +1,4 @@
 import argparse
-import datetime
 import logging
 import os
 import time
@@ -8,6 +7,9 @@ from typing import Any, Dict
 import dotenv
 from blossom_wrapper import BlossomStatus
 
+from tor_archivist import CLEAR_THE_QUEUE_MODE, NOOP_MODE, DEBUG_MODE, UPDATE_DELAY_SEC, ARCHIVING_RUN_STEPS, \
+    DISABLE_COMPLETED_ARCHIVING, DISABLE_EXPIRED_ARCHIVING, DISABLE_POST_REMOVAL_TRACKING, DISABLE_POST_REPORT_TRACKING, \
+    __VERSION__
 from tor_archivist.core.config import Config
 from tor_archivist.core.config import config
 from tor_archivist.core.helpers import run_until_dead, get_id_from_url
@@ -15,23 +17,6 @@ from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.queue_sync import track_post_removal, track_post_reports
 
 dotenv.load_dotenv()
-
-##############################
-CLEAR_THE_QUEUE_MODE = bool(os.getenv("CLEAR_THE_QUEUE", ""))
-NOOP_MODE = bool(os.getenv("NOOP_MODE", ""))
-DEBUG_MODE = bool(os.getenv("DEBUG_MODE", ""))
-
-UPDATE_DELAY_SEC = int(os.getenv("UPDATE_DELAY_SEC", 60))
-ARCHIVING_RUN_STEPS = int(os.getenv("ARCHIVING_RUN_STEPS", 10))
-
-DISABLE_COMPLETED_ARCHIVING = bool(os.getenv("DISABLE_COMPLETED_ARCHIVING", False))
-DISABLE_EXPIRED_ARCHIVING = bool(os.getenv("DISABLE_EXPIRED_ARCHIVING", False))
-DISABLE_POST_REMOVAL_TRACKING = bool(os.getenv("DISABLE_POST_REMOVAL_TRACKING", False))
-DISABLE_POST_REPORT_TRACKING = bool(os.getenv("DISABLE_POST_REPORT_TRACKING", False))
-
-# TODO: Remove the lines below with hardcoded versions.
-__VERSION__ = "1.0.0"
-##############################
 
 
 def parse_arguments():
@@ -74,8 +59,8 @@ def process_expired_posts(cfg: Config) -> None:
                 r_submission.mod.remove()
                 cfg.blossom.archive_submission(submission_id=b_submission["id"])
                 logging.info(
-                    f"Archived expired submission {b_submission['id']} - original_id"
-                    f" {b_submission['original_id']}"
+                    f"Archived expired submission {b_submission['id']}"
+                    f" ({b_submission['tor_url']})"
                 )
 
 
@@ -126,8 +111,7 @@ def archive_completed_posts(cfg: Config) -> None:
 
             cfg.archive.submit(reddit_post.title, url=transcription["url"])
             logging.info(
-                f"Submission {submission['id']} - original_id"
-                f" {submission['original_id']} - archived!"
+                f"Submission {submission['id']} ({submission['tor_url']}) archived!"
             )
 
 
@@ -145,6 +129,8 @@ def run(cfg: Config) -> None:
     else:
         cfg.sleep_until = time.time() + UPDATE_DELAY_SEC
 
+    logging.info(f"Starting cycle (step {cfg.archive_run_step}/{ARCHIVING_RUN_STEPS})")
+
     # Skip every couple archiving runs for better performance
     # The queue sync stuff is more important to run frequently
     if cfg.archive_run_step >= ARCHIVING_RUN_STEPS:
@@ -160,9 +146,8 @@ def run(cfg: Config) -> None:
         # Reset counter
         cfg.archive_run_step = 0
     else:
-        logging.info(
-            f"Skipping archiving step, {ARCHIVING_RUN_STEPS - cfg.archive_run_step} remaining"
-        )
+        # Skip archiving step
+        pass
     # Queue sync stuff
     if not DISABLE_POST_REMOVAL_TRACKING:
         track_post_removal(cfg)
@@ -172,9 +157,6 @@ def run(cfg: Config) -> None:
         track_post_reports(cfg)
     else:
         logging.info("Tracking of post reports is disabled!")
-
-    if not CLEAR_THE_QUEUE_MODE:
-        logging.info("Finished archiving - sleeping!")
 
     # Increment run step
     cfg.archive_run_step += 1
