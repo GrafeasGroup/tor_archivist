@@ -17,6 +17,7 @@ from tor_archivist import (
     DISABLE_EXPIRED_ARCHIVING,
     DISABLE_POST_REMOVAL_TRACKING,
     DISABLE_POST_REPORT_TRACKING,
+    __VERSION__,
 )
 from tor_archivist.core.config import Config
 from tor_archivist.core.config import config

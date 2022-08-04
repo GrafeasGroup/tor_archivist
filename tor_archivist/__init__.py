@@ -1,6 +1,6 @@
-__version__ = "0.7.3"
-
 import os
+
+__VERSION__ = "0.7.3"
 
 CLEAR_THE_QUEUE_MODE = bool(os.getenv("CLEAR_THE_QUEUE", ""))
 NOOP_MODE = bool(os.getenv("NOOP_MODE", ""))
