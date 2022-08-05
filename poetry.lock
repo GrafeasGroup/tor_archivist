@@ -32,6 +32,28 @@ python-versions = "*"
 colorama = {version = "*", markers = "sys_platform == \"win32\""}
 
 [[package]]
+name = "black"
+version = "22.6.0"
+description = "The uncompromising code formatter."
+category = "dev"
+optional = false
+python-versions = ">=3.6.2"
+
+[package.dependencies]
+click = ">=8.0.0"
+mypy-extensions = ">=0.4.3"
+pathspec = ">=0.9.0"
+platformdirs = ">=2"
+tomli = {version = ">=1.1.0", markers = "python_full_version < \"3.11.0a7\""}
+typing-extensions = {version = ">=3.10.0.0", markers = "python_version < \"3.10\""}
+
+[package.extras]
+colorama = ["colorama (>=0.4.3)"]
+d = ["aiohttp (>=3.7.4)"]
+jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
+uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
 name = "blossom-wrapper"
 version = "0.5.0"
 description = ""
@@ -189,6 +211,26 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.dependencies]
 pyparsing = ">=2.0.2"
+
+[[package]]
+name = "pathspec"
+version = "0.9.0"
+description = "Utility library for gitignore style pattern matching of file paths."
+category = "dev"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+
+[[package]]
+name = "platformdirs"
+version = "2.5.2"
+description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["furo (>=2021.7.5b38)", "proselint (>=0.10.2)", "sphinx-autodoc-typehints (>=1.12)", "sphinx (>=4)"]
+test = ["appdirs (==1.4.4)", "pytest-cov (>=2.7)", "pytest-mock (>=3.6)", "pytest (>=6)"]
 
 [[package]]
 name = "pluggy"
@@ -465,7 +507,7 @@ six = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "660fac2f64b7239c15ec8bce236e93c7ad58d72e88e3bc51c61480c8fa48a0ed"
+content-hash = "162d5c77602f134b6aceee8af641aabe48f5ea0e3e567acb509d01174ede3443"
 
 [metadata.files]
 atomicwrites = [
@@ -480,6 +522,7 @@ better-exceptions = [
     {file = "better_exceptions-0.2.3-py3-none-any.whl", hash = "sha256:28a851a58155cac9e677d632fba64b101151e4c6b3a5c92ecd27ca17e9bbd005"},
     {file = "better_exceptions-0.2.3.tar.gz", hash = "sha256:28184b6606d080d759ce79c738367254de2ca456eca349dcbab2514e2a865534"},
 ]
+black = []
 blossom-wrapper = []
 bugsnag = []
 certifi = []
@@ -509,6 +552,14 @@ mypy-extensions = [
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
 ]
 packaging = []
+pathspec = [
+    {file = "pathspec-0.9.0-py2.py3-none-any.whl", hash = "sha256:7d15c4ddb0b5c802d161efc417ec1a2558ea2653c2e8ad9c19098201dc1c993a"},
+    {file = "pathspec-0.9.0.tar.gz", hash = "sha256:e564499435a2673d586f6b2130bb5b95f04a3ba06f81b8f895b651a3c76aabb1"},
+]
+platformdirs = [
+    {file = "platformdirs-2.5.2-py3-none-any.whl", hash = "sha256:027d8e83a2d7de06bbac4e5ef7e023c02b863d7ea5d079477e722bb41ab25788"},
+    {file = "platformdirs-2.5.2.tar.gz", hash = "sha256:58c8abb07dcb441e6ee4b11d8df0ac856038f944ab98b7be6b27b2a3c7feef19"},
+]
 pluggy = []
 poetry-core = []
 poetry2setup = []

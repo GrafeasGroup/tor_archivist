@@ -33,6 +33,7 @@ pytest-cov = "^3.0.0"
 flake8 = "^5.0.4"
 mypy = "^0.971"
 poetry2setup = "^1.0.0"
+black = "^22.6.0"
 
 [tool.poetry.plugins."console_scripts"]
 "tor_archivist" = "tor_archivist.main:main"
