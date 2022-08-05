@@ -1,4 +1,3 @@
-[![Travis build status](https://img.shields.io/travis/TranscribersOfReddit/ToR_Archivist.svg)](https://travis-ci.org/TranscribersOfReddit/ToR_Archivist)
 [![BugSnag](https://img.shields.io/badge/errors--hosted--by-Bugsnag-blue.svg)](https://www.bugsnag.com/open-source/)
 
 # Archiver Bot - Transcribers Of Reddit
@@ -22,17 +21,7 @@ to transcribing images, audio, and video. It acts under the username `/u/ToR_arc
 
 ## Installation
 
-### From release
-
-Given a release in <https://github.com/GrafeasGroup/tor_archivist/releases>, download the attached `.tar.gz` file for your platform/architecture and `pip install` it directly like so:
-
-```sh
-$ pip install ./path/to/tor_archivist-1.0.0-linux-x86_64.tar.gz
-```
-
-### From source
-
-Make sure you have an [up-to-date copy of poetry installed](https://github.com/sdispater/poetry#installation) and at least Python 3.6.
+Make sure you have an [up-to-date copy of poetry installed](https://python-poetry.org/) and at least Python 3.9.
 
 ```sh
 $ git clone https://github.com/GrafeasGroup/tor_archivist.git tor_archivist
@@ -53,13 +42,12 @@ Monitoring daemon (via [/r/TranscribersOfReddit/new](https://www.reddit.com/r/Tr
 
 ## Build
 
-To build the package from source, start in the base of the repository and run:
+To build the package from source, activate the poetry shell and use the Makefile to create the file. You'll find the built file under `build/tor_archivist.pyz`.
 
 ```sh
-$ poetry build
+$ poetry shell
+$ make build
 ```
-
-When building is complete, upload the `.whl` file in the `dist/` directory that was just created as part of the GitHub release.
 
 ## Usage
 

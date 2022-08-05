@@ -1,11 +1,14 @@
-import argparse
 import logging
 import os
+import pathlib
+import sys
 import time
 from typing import Any, Dict
 
+import click
 import dotenv
 from blossom_wrapper import BlossomStatus
+from click.core import Context
 
 from tor_archivist import (
     CLEAR_THE_QUEUE_MODE,
@@ -17,7 +20,7 @@ from tor_archivist import (
     DISABLE_EXPIRED_ARCHIVING,
     DISABLE_POST_REMOVAL_TRACKING,
     DISABLE_POST_REPORT_TRACKING,
-    __VERSION__,
+    __version__,
 )
 from tor_archivist.core.config import Config
 from tor_archivist.core.config import config
@@ -28,26 +31,7 @@ from tor_archivist.core.queue_sync import track_post_removal, track_post_reports
 dotenv.load_dotenv()
 
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(allow_abbrev=False)
-    parser.add_argument("--version", action="version", version=__VERSION__)
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        default=DEBUG_MODE,
-        help="Puts bot in dev-mode using non-prod credentials",
-    )
-    parser.add_argument(
-        "--noop",
-        action="store_true",
-        default=NOOP_MODE,
-        help="Just run the daemon, but take no action (helpful for testing infrastructure changes)",
-    )
-
-    return parser.parse_args()
-
-
-def noop(*args: Any) -> None:
+def run_noop(*args: Any) -> None:
     time.sleep(10)
     logging.info("Loop!")
 
@@ -171,13 +155,38 @@ def run(cfg: Config) -> None:
     cfg.archive_run_step += 1
 
 
-def main():
-    opt = parse_arguments()
+@click.group(
+    context_settings=dict(help_option_names=["-h", "--help", "--halp"]),
+    invoke_without_command=True,
+)
+@click.pass_context
+@click.option(
+    "-d",
+    "--debug",
+    "debug",
+    is_flag=True,
+    default=DEBUG_MODE,
+    help="Puts bot in dev-mode using non-prod credentials",
+)
+@click.option(
+    "-n",
+    "--noop",
+    "noop",
+    is_flag=True,
+    default=NOOP_MODE,
+    help="Just run the daemon, but take no action (helpful for testing infrastructure changes)",
+)
+@click.version_option(version=__version__, prog_name="tor_archivist")
+def main(ctx: Context, debug: bool, noop: bool) -> None:
+    if ctx.invoked_subcommand:
+        # If we asked for a specific command, don't run the bot. Instead, pass control
+        # directly to the subcommand.
+        return
 
-    config.debug_mode = opt.debug
+    config.debug_mode = debug
     bot_name = "debug" if config.debug_mode else "tor_archivist"
 
-    build_bot(bot_name, __VERSION__)
+    build_bot(bot_name, __version__)
 
     config.archive = config.reddit.subreddit(
         os.environ.get("ARCHIVE_SUBREDDIT", "ToR_Archive")
@@ -188,10 +197,57 @@ def main():
 
     # jumpstart the clock -- allow running immediately after starting.
     config.sleep_until = 0
-    if opt.noop:
-        run_until_dead(noop)
+    if noop:
+        run_until_dead(run_noop)
     else:
         run_until_dead(run)
+
+
+@main.command()
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Show Pytest output instead of running quietly.",
+)
+def selfcheck(verbose: bool) -> None:
+    """
+    Verify the binary passes all tests internally.
+
+    Add any other self-check related code here.
+    """
+    import pytest
+
+    import tor_archivist.test
+
+    # -x is 'exit immediately if a test fails'
+    # We need to get the path because the file is actually inside the extracted
+    # environment maintained by shiv, not physically inside the archive at the
+    # time of running.
+    args = ["-x", str(pathlib.Path(tor_archivist.test.__file__).parent)]
+    if not verbose:
+        args.append("-qq")
+    # pytest will return an exit code that we can check on the command line
+    sys.exit(pytest.main(args))
+
+
+BANNER = r"""
+___________   __________        _____                .__    .__      .__          __
+\__    ___/___\______   \      /  _  \_______   ____ |  |__ |__|__  _|__| _______/  |_
+  |    | /  _ \|       _/     /  /_\  \_  __ \_/ ___\|  |  \|  \  \/ /  |/  ___/\   __\
+  |    |(  <_> )    |   \    /    |    \  | \/\  \___|   Y  \  |\   /|  |\___ \  |  |
+  |____| \____/|____|_  /____\____|__  /__|    \___  >___|  /__| \_/ |__/____  > |__|
+                      \/_____/       \/            \/     \/                 \/
+"""
+
+
+@main.command()
+def shell() -> None:
+    """Create a Python REPL inside the environment."""
+    import code
+
+    code.interact(local=globals(), banner=BANNER)
 
 
 if __name__ == "__main__":

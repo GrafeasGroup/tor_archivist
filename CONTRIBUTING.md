@@ -1,5 +1,3 @@
-[![Waffle.io - Columns and their card count](https://badge.waffle.io/TranscribersOfReddit/TranscribersOfReddit.svg?columns=all)](http://waffle.io/TranscribersOfReddit/TranscribersOfReddit)
-
 # Contributing
 
 Here is a short checklist of what we strive for in a well-formed code contribution:
@@ -28,14 +26,11 @@ $ git clone git@github.com:GrafeasGroup/tor_archivist.git tor_archivist
 $ cd ./tor_archivist
 
 # Setup sandbox
-$ virtualenv --no-site-packages --python=python3 venv
-$ source ./venv/bin/activate
-
-# Install the project in "editable" mode
-$ pip install --process-dependency-links -e .[dev]
+$ poetry install  # create the env, install everything into it
+$ poetry shell    # activate the environment in your command line
 ```
 
-In case there are any tests, they would be run by calling `python setup.py test`.
+In case there are any tests, they would be run by calling `pytest`.
 
 ## Testing
 
@@ -59,8 +54,7 @@ Tests are written using `pytest` for a variety of reasons. Some of which are:
 - marking some tests as expected to fail
 - colorized output compared to `unittest`
 
-We should be able to invoke the full test suite by calling either `python setup.py test` or
-`pytest` from the terminal.
+We should be able to invoke the full test suite by calling `pytest` from the terminal.
 
 The test suite should run quickly at the moment, but that won't always be the case. Running
 individual tests with `pytest path/to/test/file.py` is also acceptable while actively

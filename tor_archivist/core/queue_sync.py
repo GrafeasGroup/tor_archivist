@@ -1,5 +1,4 @@
 """Functionality to sync the Blossom queue with the queue on Reddit."""
-import datetime
 import logging
 from typing import Any, Optional, Dict
 
