@@ -1,6 +1,6 @@
 import os
 
-__VERSION__ = "0.7.3"
+__version__ = "?????"  # populated by CI pipeline
 
 CLEAR_THE_QUEUE_MODE = bool(os.getenv("CLEAR_THE_QUEUE", ""))
 NOOP_MODE = bool(os.getenv("NOOP_MODE", ""))

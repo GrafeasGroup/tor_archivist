@@ -103,4 +103,8 @@ ENV/
 
 .idea/*
 praw.ini
-heartbeat.port
+
+
+# build artifacts
+setup.py
+tor_archivist.pyz
