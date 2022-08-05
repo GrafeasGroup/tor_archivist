@@ -1,4 +1,3 @@
-import argparse
 import logging
 import os
 import pathlib
@@ -7,9 +6,9 @@ import time
 from typing import Any, Dict
 
 import click
-from click.core import Context
 import dotenv
 from blossom_wrapper import BlossomStatus
+from click.core import Context
 
 from tor_archivist import (
     CLEAR_THE_QUEUE_MODE,
