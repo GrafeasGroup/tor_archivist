@@ -1,14 +1,15 @@
 import logging
 import os
-import pathlib
 import sys
 import time
 from typing import Any, Dict
+from pathlib import Path
 
 import click
-import dotenv
 from blossom_wrapper import BlossomStatus
 from click.core import Context
+from dotenv import load_dotenv
+from shiv.bootstrap import current_zipfile
 
 from tor_archivist import (
     CLEAR_THE_QUEUE_MODE,
@@ -28,7 +29,14 @@ from tor_archivist.core.helpers import run_until_dead, get_id_from_url
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.queue_sync import track_post_removal, track_post_reports
 
-dotenv.load_dotenv()
+with current_zipfile() as archive:
+    if archive:
+        # if archive is none, we're not in the zipfile and are probably
+        # in development mode right now.
+        dotenv_path = str(Path(archive.filename).parent / ".env")
+    else:
+        dotenv_path = None
+load_dotenv(dotenv_path=dotenv_path)
 
 
 def run_noop(*args: Any) -> None:
@@ -225,7 +233,7 @@ def selfcheck(verbose: bool) -> None:
     # We need to get the path because the file is actually inside the extracted
     # environment maintained by shiv, not physically inside the archive at the
     # time of running.
-    args = ["-x", str(pathlib.Path(tor_archivist.test.__file__).parent)]
+    args = ["-x", str(Path(tor_archivist.test.__file__).parent)]
     if not verbose:
         args.append("-qq")
     # pytest will return an exit code that we can check on the command line
