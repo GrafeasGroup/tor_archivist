@@ -7,7 +7,7 @@ from blossom_wrapper import BlossomAPI
 from praw import Reddit
 from praw.models import Subreddit
 
-from tor_archivist import ARCHIVING_RUN_STEPS
+from tor_archivist import ARCHIVING_RUN_STEPS, __version__
 
 # Load configuration regardless of if bugsnag is setup correctly
 try:
@@ -99,7 +99,7 @@ except OSError:
 if bugsnag and Config.bugsnag_api_key:
     bugsnag.configure(
         api_key=Config.bugsnag_api_key,
-        app_version=pkg_resources.get_distribution("tor_archivist").version,
+        app_version=__version__,
     )
 
 # ----- Compatibility -----
