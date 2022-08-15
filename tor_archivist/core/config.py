@@ -41,7 +41,7 @@ class cached_property(object):
     # descriptor. non-data descriptors are only invoked if there is no
     # entry with the same name in the instance's __dict__. this allows
     # us to completely get rid of the access function call overhead. If
-    # one choses to invoke __get__ by hand the property will still work
+    # you chose to invoke __get__ by hand the property will still work
     # as expected because the lookup logic is replicated in __get__ for
     # manual invocation.
 
