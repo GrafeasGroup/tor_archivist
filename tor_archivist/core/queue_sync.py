@@ -2,8 +2,10 @@
 import logging
 from typing import Any, Optional, Dict
 
+from tor_archivist.core.blossom import get_blossom_submission, report_handled_blossom, remove_on_blossom, \
+    approve_on_blossom, nsfw_on_blossom, report_on_blossom
 from tor_archivist.core.config import Config
-
+from tor_archivist.core.reddit import report_handled_reddit, remove_on_reddit, approve_on_reddit, nsfw_on_reddit
 
 NSFW_POST_REPORT_REASON = "Post should be marked as NSFW"
 BOT_USERNAMES = ["tor_archivist", "blossom", "tor_tester"]
@@ -21,124 +23,6 @@ def _get_report_reason(r_submission: Any) -> Optional[str]:
         # No report available
         else None
     )
-
-
-def _get_blossom_submission(cfg: Config, tor_url: str) -> Optional[Dict]:
-    """Get the Blossom submission corresponding to the given ToR URL.
-
-    :returns: The Blossom submission object or None if it couldn't be found.
-    """
-    submission_response = cfg.blossom.get("submission", params={"tor_url": tor_url})
-    if not submission_response.ok:
-        return None
-
-    submissions = submission_response.json()["results"]
-    if len(submissions) == 0:
-        return None
-
-    submission = submissions[0]
-    return submission
-
-
-def _report_handled_reddit(r_submission: Any) -> bool:
-    """Determine if the report is already handled on Reddit."""
-    return (
-        r_submission.removed
-        or r_submission.ignore_reports
-        or r_submission.approved_at_utc
-    )
-
-
-def _report_handled_blossom(b_submission: Dict) -> bool:
-    """Determine if the report is already handled on Blossom."""
-    return (
-        b_submission.get("removed_from_queue")
-        # These are not exposed to the API yet
-        # But it doesn't hurt to leave them in and it'll work if we ever expose them
-        or b_submission.get("approved")
-        or b_submission.get("report_reason")
-    )
-
-
-def _remove_on_reddit(r_submission: Any) -> None:
-    """Remove the given submission from Reddit."""
-    r_submission.mod.remove()
-    logging.info(f"Removed submission {r_submission.url} from Reddit.")
-
-
-def _remove_on_blossom(cfg: Config, b_submission: Dict) -> None:
-    """Remove the given submission from Blossom."""
-    b_id = b_submission["id"]
-    tor_url = b_submission["tor_url"]
-
-    removal_response = cfg.blossom.patch(f"submission/{b_id}/remove")
-    if removal_response.ok:
-        logging.info(f"Removed submission {b_id} ({tor_url}) from Blossom.")
-    else:
-        logging.warning(
-            f"Failed to remove submission {b_id} ({tor_url}) from Blossom! "
-            f"({removal_response.status_code})"
-        )
-
-
-def _approve_on_reddit(r_submission: Any) -> None:
-    """Approve the given submission on Reddit."""
-    r_submission.mod.approve()
-    r_submission.mod.ignore_reports()
-    logging.info(f"Approved submission {r_submission.url} on Reddit.")
-
-
-def _approve_on_blossom(cfg: Config, b_submission: Dict) -> None:
-    """Approve the given submission on Blossom."""
-    b_id = b_submission["id"]
-    tor_url = b_submission["tor_url"]
-
-    approve_response = cfg.blossom.patch(f"submission/{b_id}/approve")
-    if approve_response.ok:
-        logging.info(f"Approved submission {b_id} ({tor_url}) on Blossom.")
-    else:
-        logging.warning(
-            f"Failed to approve submission {b_id} ({tor_url}) on Blossom! "
-            f"({approve_response.status_code})"
-        )
-
-
-def _nsfw_on_reddit(r_submission: Any) -> None:
-    """Mark the submission as NSFW on Reddit."""
-    r_submission.mod.nsfw()
-    logging.info(f"Submission {r_submission.url} marked as NSFW on Reddit.")
-
-
-def _nsfw_on_blossom(cfg: Config, b_submission: Dict) -> None:
-    """Mark the submission as NSFW on Blossom."""
-    b_id = b_submission["id"]
-    tor_url = b_submission["tor_url"]
-
-    nsfw_response = cfg.blossom.patch(f"submission/{b_id}/nsfw")
-    if nsfw_response.ok:
-        logging.info(f"Submission {b_id} ({tor_url}) marked as NSFW on Blossom.")
-    else:
-        logging.warning(
-            f"Failed to mark submission {b_id} ({tor_url}) as NSFW on Blossom! "
-            f"({nsfw_response.status_code})"
-        )
-
-
-def _report_on_blossom(cfg: Config, b_submission: Dict, reason: str) -> None:
-    """Report the submission on Blossom."""
-    b_id = b_submission["id"]
-    tor_url = b_submission["tor_url"]
-
-    report_response = cfg.blossom.patch(
-        f"submission/{b_id}/report", data={"reason": reason}
-    )
-    if report_response.ok:
-        logging.info(f"Reported submission {b_id} ({tor_url}) to Blossom.")
-    else:
-        logging.warning(
-            f"Failed to report submission {b_id} ({tor_url}) to Blossom! "
-            f"({report_response.status_code})"
-        )
 
 
 def _auto_report_handling(
@@ -159,24 +43,24 @@ def _auto_report_handling(
 
     # Check if the post is marked as NSFW on the partner sub
     if not r_submission.over_18 and partner_submission.over_18:
-        _nsfw_on_reddit(r_submission)
-        _nsfw_on_blossom(cfg, b_submission)
+        nsfw_on_reddit(r_submission)
+        nsfw_on_blossom(cfg, b_submission)
 
     # Check if the post has been removed on the partner sub
     if partner_submission.removed_by_category:
         # Removed on the partner sub, it's safe to remove
         # But only do it if the submission is not marked as removed already
         if not r_submission.removed_by_category:
-            _remove_on_reddit(r_submission)
-            _remove_on_blossom(cfg, b_submission)
+            remove_on_reddit(r_submission)
+            remove_on_blossom(cfg, b_submission)
         # We can ignore the report
         return True
 
     if reason == NSFW_POST_REPORT_REASON:
         # We already handled NSFW reports
         # We still need to approve the submission to remove the item from mod queue
-        _approve_on_reddit(r_submission)
-        _approve_on_blossom(cfg, b_submission)
+        approve_on_reddit(r_submission)
+        approve_on_blossom(cfg, b_submission)
         return True
 
     return False
@@ -194,7 +78,7 @@ def track_post_removal(cfg: Config) -> None:
             continue
 
         # Fetch the corresponding submission from Blossom
-        b_submission = _get_blossom_submission(cfg, tor_url)
+        b_submission = get_blossom_submission(cfg, tor_url)
         if b_submission is None:
             logging.warning(f"Can't find submission {tor_url} in Blossom!")
             continue
@@ -204,7 +88,7 @@ def track_post_removal(cfg: Config) -> None:
             logging.debug(f"Submission {b_submission_id} has already been removed.")
             continue
 
-        _remove_on_blossom(cfg, b_submission)
+        remove_on_blossom(cfg, b_submission)
 
 
 def track_post_reports(cfg: Config) -> None:
@@ -212,7 +96,7 @@ def track_post_reports(cfg: Config) -> None:
     logging.info("Tracking post reports!")
     for r_submission in cfg.tor.mod.modqueue(only="submissions", limit=None):
         # Check if the report has already been handled
-        if _report_handled_reddit(r_submission):
+        if report_handled_reddit(r_submission):
             continue
 
         # Determine the report reason
@@ -223,13 +107,13 @@ def track_post_reports(cfg: Config) -> None:
         tor_url = "https://reddit.com" + r_submission.permalink
 
         # Fetch the corresponding submission from Blossom
-        b_submission = _get_blossom_submission(cfg, tor_url)
+        b_submission = get_blossom_submission(cfg, tor_url)
         if b_submission is None:
             logging.warning(f"Can't find submission {tor_url} in Blossom!")
             continue
         b_id = b_submission["id"]
 
-        if _report_handled_blossom(b_submission):
+        if report_handled_blossom(b_submission):
             logging.debug(f"Submission {b_id} has already been removed.")
             continue
 
@@ -238,4 +122,4 @@ def track_post_reports(cfg: Config) -> None:
         if _auto_report_handling(cfg, r_submission, b_submission, reason):
             continue
 
-        _report_on_blossom(cfg, b_submission, reason)
+        report_on_blossom(cfg, b_submission, reason)
