@@ -23,11 +23,13 @@ from tor_archivist import (
     DISABLE_POST_REPORT_TRACKING,
     __version__,
 )
+from tor_archivist.core.blossom import nsfw_on_blossom, remove_on_blossom
 from tor_archivist.core.config import Config
 from tor_archivist.core.config import config
 from tor_archivist.core.helpers import run_until_dead, get_id_from_url
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.queue_sync import track_post_removal, track_post_reports
+from tor_archivist.core.reddit import nsfw_on_reddit, remove_on_reddit
 
 with current_zipfile() as archive:
     if archive:
@@ -63,6 +65,26 @@ def process_expired_posts(cfg: Config) -> None:
                     f"Archived expired submission {b_submission['id']}"
                     f" ({b_submission['tor_url']})"
                 )
+            else:
+                logging.info(
+                    f"Updating outdated archive status for submission {b_submission['id']}"
+                    f" ({b_submission['tor_url']})"
+                )
+                # The post was not archived, but has been removed from ToR already
+                # We need to update the Blossom object to remove this post from the endpoint
+                partner_submission = cfg.reddit.submission(url=r_submission.url)
+
+                # Update NSFW status just to be safe
+                if not r_submission.over_18 and partner_submission.over_18:
+                    nsfw_on_reddit(r_submission)
+                    nsfw_on_blossom(cfg, b_submission)
+
+                if partner_submission.removed_by_category:
+                    # The submission has been removed on the partner sub, remove it on Blossom
+                    remove_on_blossom(cfg, b_submission)
+                else:
+                    # Archive it on Blossom
+                    cfg.blossom.archive_submission(submission_id=b_submission["id"])
 
 
 def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
