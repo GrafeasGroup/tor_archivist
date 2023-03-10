@@ -29,7 +29,7 @@ from tor_archivist.core.config import config
 from tor_archivist.core.helpers import run_until_dead, get_id_from_url
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.queue_sync import track_post_removal, track_post_reports
-from tor_archivist.core.reddit import nsfw_on_reddit, remove_on_reddit
+from tor_archivist.core.reddit import nsfw_on_reddit
 
 with current_zipfile() as archive:
     if archive:
