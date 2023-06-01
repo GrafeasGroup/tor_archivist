@@ -35,6 +35,8 @@ pytest-cov = "^3.0.0"
 mypy = "^0.971"
 poetry2setup = { git = "https://github.com/abersheeran/poetry2setup", branch = "master" }
 ruff = "^0.0.270"
+pre-commit = "^3.3.2"
+coveralls = "^3.3.1"
 
 [tool.black]
 line-length = 100
