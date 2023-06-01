@@ -32,7 +32,6 @@ pytest = "^7.1.2"
 better-exceptions = "^0.2.2"
 black = "^22.6.0"
 pytest-cov = "^3.0.0"
-flake8 = "^5.0.4"
 mypy = "^0.971"
 poetry2setup = { git = "https://github.com/abersheeran/poetry2setup", branch = "master" }
 ruff = "^0.0.270"
