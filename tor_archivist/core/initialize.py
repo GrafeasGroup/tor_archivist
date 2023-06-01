@@ -4,12 +4,14 @@ import os
 from blossom_wrapper import BlossomAPI
 from bugsnag.handlers import BugsnagHandler
 from praw import Reddit
+from praw.models import SubredditHelper
 
-from tor_archivist.core.config import config
+from tor_archivist.core.config import Config, config
 from tor_archivist.core.helpers import log_header
 
 
-def has_tor_environment_vars():
+def has_tor_environment_vars() -> bool:
+    """Determine if the required env variables are defined."""
     for var in ("username", "password", "client_id", "client_secret", "user_agent"):
         if f"praw_{var}" not in os.environ:
             return False
@@ -17,9 +19,10 @@ def has_tor_environment_vars():
     return True
 
 
-def configure_tor(config):
-    """Assembles the tor object based on whether or not we've enabled debug mode
-    and returns it. There's really no reason to put together a Subreddit
+def configure_tor(config: Config) -> SubredditHelper:
+    """Assemble the tor object based on whether we've enabled debug mode.
+
+    There's really no reason to put together a Subreddit
     object dedicated to our subreddit -- it just makes some future lines
     a little easier to type.
 
@@ -36,7 +39,8 @@ def configure_tor(config):
     return tor
 
 
-def configure_logging(config):
+def configure_logging(config: Config) -> None:
+    """Configure the logging setup for the bot."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(levelname)s | %(funcName)s | %(message)s",
@@ -55,7 +59,8 @@ def configure_logging(config):
     log_header("Starting!")
 
 
-def get_blossom_connection():
+def get_blossom_connection() -> BlossomAPI:
+    """Return the BlossomAPI object."""
     return BlossomAPI(
         email=os.getenv("BLOSSOM_EMAIL"),
         password=os.getenv("BLOSSOM_PASSWORD"),
@@ -63,18 +68,15 @@ def get_blossom_connection():
     )
 
 
-def get_user_info(config, username: str = None) -> None:
-    if not username:
-        username = "tor_archivist"
+def get_user_info(config: Config, username: str = "tor_archivist") -> None:
+    """Return info about the given user."""
     return config.blossom.get("volunteer/", params={"username": username}).json()["results"][0]
 
 
-def build_bot(
-    name,
-    version,
-):
-    """Shortcut for setting up a bot instance. Runs all configuration and returns
-    a valid config object.
+def build_bot(name: str, version: str) -> None:
+    """Shortcut for setting up a bot instance.
+
+    Runs all configuration and returns a valid config object.
 
     :param name: string; The name of the bot to be started; this name must
         match the settings in praw.ini

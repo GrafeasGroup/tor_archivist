@@ -41,11 +41,13 @@ load_dotenv(dotenv_path=dotenv_path)
 
 
 def run_noop(*args: Any) -> None:
+    """Pretend to do work, but don't actually do it."""
     time.sleep(10)
     logging.info("Loop!")
 
 
 def process_expired_posts(cfg: Config) -> None:
+    """Process posts that are too old."""
     response = cfg.blossom.get_expired_submissions()
 
     if response.status != BlossomStatus.ok:
@@ -87,6 +89,7 @@ def process_expired_posts(cfg: Config) -> None:
 
 
 def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
+    """Get the transcription of the given submission that was made by a human."""
     response = cfg.blossom.get("transcription/search/", params={"submission_id": submission["id"]})
     for transcription in response.json():
         if int(get_id_from_url(transcription["author"])) == config.transcribot["id"]:
@@ -96,6 +99,7 @@ def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
 
 
 def archive_completed_posts(cfg: Config) -> None:
+    """Archive posts that have been completed by a volunteer."""
     response = cfg.blossom.get_unarchived_submissions()
 
     if response.status != BlossomStatus.ok:
@@ -133,6 +137,7 @@ def archive_completed_posts(cfg: Config) -> None:
 
 
 def run(cfg: Config) -> None:
+    """Run the bot indefinitely."""
     if not CLEAR_THE_QUEUE_MODE and cfg.sleep_until >= time.time():
         # TODO: if ctq is active, send ctq query parameter to expired endpoint
         # This is how we sleep for longer periods, but still respond to
@@ -202,6 +207,7 @@ def run(cfg: Config) -> None:
 )
 @click.version_option(version=__version__, prog_name="tor_archivist")
 def main(ctx: Context, debug: bool, noop: bool) -> None:
+    """Get the bot going, let's go."""
     if ctx.invoked_subcommand:
         # If we asked for a specific command, don't run the bot. Instead, pass control
         # directly to the subcommand.

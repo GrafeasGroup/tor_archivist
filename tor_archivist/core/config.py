@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Any, Callable, Optional
 
 from blossom_wrapper import BlossomAPI
 from praw import Reddit
@@ -20,10 +20,11 @@ _missing = object()
 
 # @see https://stackoverflow.com/a/17487613/1236035
 class cached_property(object):
-    """A decorator that converts a function into a lazy property.  The
-    function wrapped is called the first time to retrieve the result
+    """A decorator that converts a function into a lazy property.
+
+    The function wrapped is called the first time to retrieve the result
     and then that calculated result is used the next time you access
-    the value::
+    the value:
 
         class Foo(object):
 
@@ -44,13 +45,14 @@ class cached_property(object):
     # as expected because the lookup logic is replicated in __get__ for
     # manual invocation.
 
-    def __init__(self, func, name=None, doc=None) -> None:
+    def __init__(self, func: Callable, name: Optional[str]=None, doc: Optional[str]=None) -> None:
+        """Create a new cachable property."""
         self.__name__ = name or func.__name__
         self.__module__ = func.__module__
         self.__doc__ = doc or func.__doc__
         self.func = func
 
-    def __get__(self, obj, _type=None):
+    def __get__(self, obj: Any, _type: Any=None) -> Any:
         if obj is None:
             return self
         value = obj.__dict__.get(self.__name__, _missing)
@@ -61,9 +63,7 @@ class cached_property(object):
 
 
 class Config(object):
-    """A singleton object for checking global configuration from
-    anywhere in the application.
-    """
+    """A singleton object for checking global configuration from anywhere in the application."""
 
     # API keys for later overwriting based on contents of filesystem
     bugsnag_api_key = None

@@ -3,6 +3,7 @@ import re
 import signal
 import sys
 import time
+from typing import Any, Callable
 from urllib.parse import urlparse
 
 import praw
@@ -30,24 +31,26 @@ def get_id_from_url(url: str) -> str:
     return list(filter(None, urlparse(url).path.split("/")))[-1]
 
 
-def _(message):
-    """Message formatter. Returns the message and the disclaimer for the
-    footer.
+def _(message: str) -> str:
+    """Return the message wrapped in the bot footer.
 
-    :param message: string. The message to be displayed.
-    :return: string. The original message plus the footer.
+    :param message: The message to be displayed.
+    :return: The original message plus the footer.
     """
     return bot_footer.format(message, version=__version__)
 
 
-def log_header(message):
+def log_header(message: str) -> None:
+    """Create a pretty header for the given message."""
     logging.info("*" * 50)
     logging.info(message)
     logging.info("*" * 50)
 
 
-def explode_gracefully(error):
-    """A last-ditch effort to try to raise a few more flags as it goes down.
+def explode_gracefully(error: RuntimeError) -> None:
+    """Shut down the bot due to an error, logging the error in the meantime.
+
+    A last-ditch effort to try to raise a few more flags as it goes down.
     Only call in times of dire need.
 
     :param bot_name: string; the name of the bot calling the method.
@@ -59,19 +62,24 @@ def explode_gracefully(error):
     sys.exit(1)
 
 
-def handle_rate_limit(exc):
+def handle_rate_limit(exc: Any) -> None:
+    """Handle the Reddit rate limit."""
     time_map = {
         "second": 1,
         "minute": 60,
         "hour": 60 * 60,
     }
     matches = re.search(_pattern, exc.message)
-    delay = matches[0] * time_map[matches[1]]
-    time.sleep(delay + 1)
+
+    if matches is not None:
+        delay = int(matches[0]) * time_map[matches[1]]
+        time.sleep(delay + 1)
 
 
-def signal_handler(signal, frame):
-    """This is the SIGINT handler that allows us to intercept CTRL+C.
+def signal_handler(signal: Any, frame: Any) -> None:
+    """Handle SIGINT events.
+
+    This is the SIGINT handler that allows us to intercept CTRL+C.
     When this is triggered, it will wait until the primary loop ends
     the current iteration before ending. Press CTRL+C twice to kill
     immediately.
@@ -90,8 +98,10 @@ def signal_handler(signal, frame):
     running = False
 
 
-def run_until_dead(func, exceptions=default_exceptions):
-    """The official method that replaces all that ugly boilerplate required to
+def run_until_dead(func: Callable, exceptions: tuple = default_exceptions) -> None:
+    """Run the function until it gets killed by the user.
+
+    The official method that replaces all that ugly boilerplate required to
     start up a bot under the TranscribersOfReddit umbrella. This method handles
     communication issues with Reddit, timeouts, and handles CTRL+C and
     unexpected crashes.
