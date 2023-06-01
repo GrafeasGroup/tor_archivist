@@ -37,6 +37,9 @@ mypy = "^0.971"
 poetry2setup = { git = "https://github.com/abersheeran/poetry2setup", branch = "master" }
 ruff = "^0.0.270"
 
+[tool.black]
+line-length = 100
+
 [tool.poetry.plugins."console_scripts"]
 "tor_archivist" = "tor_archivist.main:main"
 

@@ -89,9 +89,7 @@ def signal_handler(signal, frame):
         logging.critical("User pressed CTRL+C twice!!! Killing!")
         sys.exit(1)
 
-    logging.info(
-        "\rUser triggered command line shutdown. Will terminate after current loop."
-    )
+    logging.info("\rUser triggered command line shutdown. Will terminate after current loop.")
     running = False
 
 
@@ -125,9 +123,7 @@ def run_until_dead(func, exceptions=default_exceptions):
                     )
                     handle_rate_limit(e)
             except exceptions as e:
-                logging.warning(
-                    f"{e} - Issue communicating with Reddit. Sleeping for 60s!"
-                )
+                logging.warning(f"{e} - Issue communicating with Reddit. Sleeping for 60s!")
                 time.sleep(60)
 
         logging.info("User triggered shutdown. Shutting down.")

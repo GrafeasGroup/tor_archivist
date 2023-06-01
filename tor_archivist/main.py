@@ -88,9 +88,7 @@ def process_expired_posts(cfg: Config) -> None:
 
 
 def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
-    response = cfg.blossom.get(
-        "transcription/search/", params={"submission_id": submission["id"]}
-    )
+    response = cfg.blossom.get("transcription/search/", params={"submission_id": submission["id"]})
     for transcription in response.json():
         if int(get_id_from_url(transcription["author"])) == config.transcribot["id"]:
             continue
@@ -124,8 +122,7 @@ def archive_completed_posts(cfg: Config) -> None:
 
             if not transcription.get("url"):
                 logging.warning(
-                    f"Transcription {transcription['id']} does not have a URL"
-                    f" - skipping."
+                    f"Transcription {transcription['id']} does not have a URL" f" - skipping."
                 )
                 continue
 
@@ -133,9 +130,7 @@ def archive_completed_posts(cfg: Config) -> None:
                 transcription["url"] = f"https://reddit.com{transcription['url']}"
 
             cfg.archive.submit(reddit_post.title, url=transcription["url"])
-            logging.info(
-                f"Submission {submission['id']} ({submission['tor_url']}) archived!"
-            )
+            logging.info(f"Submission {submission['id']} ({submission['tor_url']}) archived!")
 
 
 def run(cfg: Config) -> None:
@@ -218,12 +213,8 @@ def main(ctx: Context, debug: bool, noop: bool) -> None:
 
     build_bot(bot_name, __version__)
 
-    config.archive = config.reddit.subreddit(
-        os.environ.get("ARCHIVE_SUBREDDIT", "ToR_Archive")
-    )
-    config.tor = config.reddit.subreddit(
-        os.environ.get("TOR_SUBREDDIT", "TranscribersOfReddit")
-    )
+    config.archive = config.reddit.subreddit(os.environ.get("ARCHIVE_SUBREDDIT", "ToR_Archive"))
+    config.tor = config.reddit.subreddit(os.environ.get("TOR_SUBREDDIT", "TranscribersOfReddit"))
 
     # jumpstart the clock -- allow running immediately after starting.
     config.sleep_until = 0

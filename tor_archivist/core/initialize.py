@@ -67,9 +67,7 @@ def get_blossom_connection():
 def get_user_info(config, username: str = None) -> None:
     if not username:
         username = "tor_archivist"
-    return config.blossom.get("volunteer/", params={"username": username}).json()[
-        "results"
-    ][0]
+    return config.blossom.get("volunteer/", params={"username": username}).json()["results"][0]
 
 
 def build_bot(
