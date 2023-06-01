@@ -1,21 +1,21 @@
 """Functionality to sync the Blossom queue with the queue on Reddit."""
 import logging
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
 from tor_archivist.core.blossom import (
-    get_blossom_submission,
-    report_handled_blossom,
-    remove_on_blossom,
     approve_on_blossom,
+    get_blossom_submission,
     nsfw_on_blossom,
+    remove_on_blossom,
+    report_handled_blossom,
     report_on_blossom,
 )
 from tor_archivist.core.config import Config
 from tor_archivist.core.reddit import (
-    report_handled_reddit,
-    remove_on_reddit,
     approve_on_reddit,
     nsfw_on_reddit,
+    remove_on_reddit,
+    report_handled_reddit,
 )
 
 NSFW_POST_REPORT_REASON = "Post should be marked as NSFW"

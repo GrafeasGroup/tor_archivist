@@ -31,8 +31,7 @@ def get_id_from_url(url: str) -> str:
 
 
 def _(message):
-    """
-    Message formatter. Returns the message and the disclaimer for the
+    """Message formatter. Returns the message and the disclaimer for the
     footer.
 
     :param message: string. The message to be displayed.
@@ -48,8 +47,7 @@ def log_header(message):
 
 
 def explode_gracefully(error):
-    """
-    A last-ditch effort to try to raise a few more flags as it goes down.
+    """A last-ditch effort to try to raise a few more flags as it goes down.
     Only call in times of dire need.
 
     :param bot_name: string; the name of the bot calling the method.
@@ -73,8 +71,7 @@ def handle_rate_limit(exc):
 
 
 def signal_handler(signal, frame):
-    """
-    This is the SIGINT handler that allows us to intercept CTRL+C.
+    """This is the SIGINT handler that allows us to intercept CTRL+C.
     When this is triggered, it will wait until the primary loop ends
     the current iteration before ending. Press CTRL+C twice to kill
     immediately.
@@ -94,8 +91,7 @@ def signal_handler(signal, frame):
 
 
 def run_until_dead(func, exceptions=default_exceptions):
-    """
-    The official method that replaces all that ugly boilerplate required to
+    """The official method that replaces all that ugly boilerplate required to
     start up a bot under the TranscribersOfReddit umbrella. This method handles
     communication issues with Reddit, timeouts, and handles CTRL+C and
     unexpected crashes.

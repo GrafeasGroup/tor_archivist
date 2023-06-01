@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from tor_archivist.core.config import Config
 

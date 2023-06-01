@@ -18,8 +18,7 @@ def has_tor_environment_vars():
 
 
 def configure_tor(config):
-    """
-    Assembles the tor object based on whether or not we've enabled debug mode
+    """Assembles the tor object based on whether or not we've enabled debug mode
     and returns it. There's really no reason to put together a Subreddit
     object dedicated to our subreddit -- it just makes some future lines
     a little easier to type.
@@ -74,8 +73,7 @@ def build_bot(
     name,
     version,
 ):
-    """
-    Shortcut for setting up a bot instance. Runs all configuration and returns
+    """Shortcut for setting up a bot instance. Runs all configuration and returns
     a valid config object.
 
     :param name: string; The name of the bot to be started; this name must
@@ -90,7 +88,6 @@ def build_bot(
         not have it crash on start because Redis isn't running.
     :return: None
     """
-
     if has_tor_environment_vars():
         config.reddit = Reddit()
     else:

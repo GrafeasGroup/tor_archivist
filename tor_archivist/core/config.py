@@ -2,7 +2,6 @@ import os
 from typing import Optional
 
 from blossom_wrapper import BlossomAPI
-
 from praw import Reddit
 from praw.models import Subreddit
 
@@ -45,7 +44,7 @@ class cached_property(object):
     # as expected because the lookup logic is replicated in __get__ for
     # manual invocation.
 
-    def __init__(self, func, name=None, doc=None):
+    def __init__(self, func, name=None, doc=None) -> None:
         self.__name__ = name or func.__name__
         self.__module__ = func.__module__
         self.__doc__ = doc or func.__doc__
@@ -62,9 +61,8 @@ class cached_property(object):
 
 
 class Config(object):
-    """
-    A singleton object for checking global configuration from
-    anywhere in the application
+    """A singleton object for checking global configuration from
+    anywhere in the application.
     """
 
     # API keys for later overwriting based on contents of filesystem

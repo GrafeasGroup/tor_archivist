@@ -2,8 +2,8 @@ import logging
 import os
 import sys
 import time
-from typing import Any, Dict
 from pathlib import Path
+from typing import Any, Dict
 
 import click
 from blossom_wrapper import BlossomStatus
@@ -12,21 +12,20 @@ from dotenv import load_dotenv
 from shiv.bootstrap import current_zipfile
 
 from tor_archivist import (
-    CLEAR_THE_QUEUE_MODE,
-    NOOP_MODE,
-    DEBUG_MODE,
-    UPDATE_DELAY_SEC,
     ARCHIVING_RUN_STEPS,
+    CLEAR_THE_QUEUE_MODE,
+    DEBUG_MODE,
     DISABLE_COMPLETED_ARCHIVING,
     DISABLE_EXPIRED_ARCHIVING,
     DISABLE_POST_REMOVAL_TRACKING,
     DISABLE_POST_REPORT_TRACKING,
+    NOOP_MODE,
+    UPDATE_DELAY_SEC,
     __version__,
 )
 from tor_archivist.core.blossom import nsfw_on_blossom, remove_on_blossom
-from tor_archivist.core.config import Config
-from tor_archivist.core.config import config
-from tor_archivist.core.helpers import run_until_dead, get_id_from_url
+from tor_archivist.core.config import Config, config
+from tor_archivist.core.helpers import get_id_from_url, run_until_dead
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.queue_sync import track_post_removal, track_post_reports
 from tor_archivist.core.reddit import nsfw_on_reddit
@@ -233,8 +232,7 @@ def main(ctx: Context, debug: bool, noop: bool) -> None:
     help="Show Pytest output instead of running quietly.",
 )
 def selfcheck(verbose: bool) -> None:
-    """
-    Verify the binary passes all tests internally.
+    """Verify the binary passes all tests internally.
 
     Add any other self-check related code here.
     """
