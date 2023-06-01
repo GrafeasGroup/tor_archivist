@@ -28,13 +28,14 @@ click = "^8.1.3"
 shiv = "^1.0.1"
 pytest = "^7.1.2"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 better-exceptions = "^0.2.2"
+black = "^22.6.0"
 pytest-cov = "^3.0.0"
 flake8 = "^5.0.4"
 mypy = "^0.971"
 poetry2setup = { git = "https://github.com/abersheeran/poetry2setup", branch = "master" }
-black = "^22.6.0"
+ruff = "^0.0.270"
 
 [tool.poetry.plugins."console_scripts"]
 "tor_archivist" = "tor_archivist.main:main"
