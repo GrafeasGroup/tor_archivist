@@ -1,3 +1,4 @@
+"""The u/tor_archivist bot."""
 import os
 
 __version__ = "?????"  # populated by CI pipeline

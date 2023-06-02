@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from tor_archivist.core.config import Config
 
@@ -82,9 +82,7 @@ def report_on_blossom(cfg: Config, b_submission: Dict, reason: str) -> None:
     b_id = b_submission["id"]
     tor_url = b_submission["tor_url"]
 
-    report_response = cfg.blossom.patch(
-        f"submission/{b_id}/report", data={"reason": reason}
-    )
+    report_response = cfg.blossom.patch(f"submission/{b_id}/report", data={"reason": reason})
     if report_response.ok:
         logging.info(f"Reported submission {b_id} ({tor_url}) to Blossom.")
     else:

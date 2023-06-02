@@ -1,11 +1,22 @@
 """Functionality to sync the Blossom queue with the queue on Reddit."""
 import logging
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
-from tor_archivist.core.blossom import get_blossom_submission, report_handled_blossom, remove_on_blossom, \
-    approve_on_blossom, nsfw_on_blossom, report_on_blossom
+from tor_archivist.core.blossom import (
+    approve_on_blossom,
+    get_blossom_submission,
+    nsfw_on_blossom,
+    remove_on_blossom,
+    report_handled_blossom,
+    report_on_blossom,
+)
 from tor_archivist.core.config import Config
-from tor_archivist.core.reddit import report_handled_reddit, remove_on_reddit, approve_on_reddit, nsfw_on_reddit
+from tor_archivist.core.reddit import (
+    approve_on_reddit,
+    nsfw_on_reddit,
+    remove_on_reddit,
+    report_handled_reddit,
+)
 
 NSFW_POST_REPORT_REASON = "Post should be marked as NSFW"
 BOT_USERNAMES = ["tor_archivist", "blossom", "tor_tester"]
@@ -25,9 +36,7 @@ def _get_report_reason(r_submission: Any) -> Optional[str]:
     )
 
 
-def _auto_report_handling(
-    cfg: Config, r_submission: Any, b_submission: Dict, reason: str
-) -> bool:
+def _auto_report_handling(cfg: Config, r_submission: Any, b_submission: Dict, reason: str) -> bool:
     """Check if the report can be handled automatically.
 
     This is possible in the following cases:

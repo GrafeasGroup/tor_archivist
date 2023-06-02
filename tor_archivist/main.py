@@ -2,8 +2,8 @@ import logging
 import os
 import sys
 import time
-from typing import Any, Dict
 from pathlib import Path
+from typing import Any, Dict
 
 import click
 from blossom_wrapper import BlossomStatus
@@ -12,21 +12,20 @@ from dotenv import load_dotenv
 from shiv.bootstrap import current_zipfile
 
 from tor_archivist import (
-    CLEAR_THE_QUEUE_MODE,
-    NOOP_MODE,
-    DEBUG_MODE,
-    UPDATE_DELAY_SEC,
     ARCHIVING_RUN_STEPS,
+    CLEAR_THE_QUEUE_MODE,
+    DEBUG_MODE,
     DISABLE_COMPLETED_ARCHIVING,
     DISABLE_EXPIRED_ARCHIVING,
     DISABLE_POST_REMOVAL_TRACKING,
     DISABLE_POST_REPORT_TRACKING,
+    NOOP_MODE,
+    UPDATE_DELAY_SEC,
     __version__,
 )
 from tor_archivist.core.blossom import nsfw_on_blossom, remove_on_blossom
-from tor_archivist.core.config import Config
-from tor_archivist.core.config import config
-from tor_archivist.core.helpers import run_until_dead, get_id_from_url
+from tor_archivist.core.config import Config, config
+from tor_archivist.core.helpers import get_id_from_url, run_until_dead
 from tor_archivist.core.initialize import build_bot
 from tor_archivist.core.queue_sync import track_post_removal, track_post_reports
 from tor_archivist.core.reddit import nsfw_on_reddit
@@ -42,11 +41,13 @@ load_dotenv(dotenv_path=dotenv_path)
 
 
 def run_noop(*args: Any) -> None:
+    """Pretend to do work, but don't actually do it."""
     time.sleep(10)
     logging.info("Loop!")
 
 
 def process_expired_posts(cfg: Config) -> None:
+    """Process posts that are too old."""
     response = cfg.blossom.get_expired_submissions()
 
     if response.status != BlossomStatus.ok:
@@ -88,9 +89,8 @@ def process_expired_posts(cfg: Config) -> None:
 
 
 def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
-    response = cfg.blossom.get(
-        "transcription/search/", params={"submission_id": submission["id"]}
-    )
+    """Get the transcription of the given submission that was made by a human."""
+    response = cfg.blossom.get("transcription/search/", params={"submission_id": submission["id"]})
     for transcription in response.json():
         if int(get_id_from_url(transcription["author"])) == config.transcribot["id"]:
             continue
@@ -99,6 +99,7 @@ def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
 
 
 def archive_completed_posts(cfg: Config) -> None:
+    """Archive posts that have been completed by a volunteer."""
     response = cfg.blossom.get_unarchived_submissions()
 
     if response.status != BlossomStatus.ok:
@@ -124,8 +125,7 @@ def archive_completed_posts(cfg: Config) -> None:
 
             if not transcription.get("url"):
                 logging.warning(
-                    f"Transcription {transcription['id']} does not have a URL"
-                    f" - skipping."
+                    f"Transcription {transcription['id']} does not have a URL" f" - skipping."
                 )
                 continue
 
@@ -133,12 +133,11 @@ def archive_completed_posts(cfg: Config) -> None:
                 transcription["url"] = f"https://reddit.com{transcription['url']}"
 
             cfg.archive.submit(reddit_post.title, url=transcription["url"])
-            logging.info(
-                f"Submission {submission['id']} ({submission['tor_url']}) archived!"
-            )
+            logging.info(f"Submission {submission['id']} ({submission['tor_url']}) archived!")
 
 
 def run(cfg: Config) -> None:
+    """Run the bot indefinitely."""
     if not CLEAR_THE_QUEUE_MODE and cfg.sleep_until >= time.time():
         # TODO: if ctq is active, send ctq query parameter to expired endpoint
         # This is how we sleep for longer periods, but still respond to
@@ -208,6 +207,7 @@ def run(cfg: Config) -> None:
 )
 @click.version_option(version=__version__, prog_name="tor_archivist")
 def main(ctx: Context, debug: bool, noop: bool) -> None:
+    """Get the bot going, let's go."""
     if ctx.invoked_subcommand:
         # If we asked for a specific command, don't run the bot. Instead, pass control
         # directly to the subcommand.
@@ -218,12 +218,8 @@ def main(ctx: Context, debug: bool, noop: bool) -> None:
 
     build_bot(bot_name, __version__)
 
-    config.archive = config.reddit.subreddit(
-        os.environ.get("ARCHIVE_SUBREDDIT", "ToR_Archive")
-    )
-    config.tor = config.reddit.subreddit(
-        os.environ.get("TOR_SUBREDDIT", "TranscribersOfReddit")
-    )
+    config.archive = config.reddit.subreddit(os.environ.get("ARCHIVE_SUBREDDIT", "ToR_Archive"))
+    config.tor = config.reddit.subreddit(os.environ.get("TOR_SUBREDDIT", "TranscribersOfReddit"))
 
     # jumpstart the clock -- allow running immediately after starting.
     config.sleep_until = 0
@@ -242,8 +238,7 @@ def main(ctx: Context, debug: bool, noop: bool) -> None:
     help="Show Pytest output instead of running quietly.",
 )
 def selfcheck(verbose: bool) -> None:
-    """
-    Verify the binary passes all tests internally.
+    """Verify the binary passes all tests internally.
 
     Add any other self-check related code here.
     """

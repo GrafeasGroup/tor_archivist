@@ -4,11 +4,7 @@ from typing import Any
 
 def report_handled_reddit(r_submission: Any) -> bool:
     """Determine if the report is already handled on Reddit."""
-    return (
-        r_submission.removed
-        or r_submission.ignore_reports
-        or r_submission.approved_at_utc
-    )
+    return r_submission.removed or r_submission.ignore_reports or r_submission.approved_at_utc
 
 
 def remove_on_reddit(r_submission: Any) -> None:
