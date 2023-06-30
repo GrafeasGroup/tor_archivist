@@ -80,6 +80,18 @@ def process_expired_posts(cfg: Config) -> None:
                 # We need to update the Blossom object to remove this post from the endpoint
                 try:
                     partner_submission = cfg.reddit.submission(url=r_submission.url)
+
+                    # Update NSFW status just to be safe
+                    if not r_submission.over_18 and partner_submission.over_18:
+                        nsfw_on_reddit(r_submission)
+                        nsfw_on_blossom(cfg, b_submission)
+
+                    if partner_submission.removed_by_category:
+                        # The submission has been removed on the partner sub, remove it on Blossom
+                        remove_on_blossom(cfg, b_submission)
+                    else:
+                        # Archive it on Blossom
+                        cfg.blossom.archive_submission(submission_id=b_submission["id"])
                 except Forbidden:
                     # The sub is private, remove the submission from the queue
                     logging.warning(
@@ -89,19 +101,6 @@ def process_expired_posts(cfg: Config) -> None:
                         remove_on_reddit(r_submission)
                     if not b_submission["removed_from_queue"]:
                         remove_on_blossom(cfg, b_submission)
-                    return
-
-                # Update NSFW status just to be safe
-                if not r_submission.over_18 and partner_submission.over_18:
-                    nsfw_on_reddit(r_submission)
-                    nsfw_on_blossom(cfg, b_submission)
-
-                if partner_submission.removed_by_category:
-                    # The submission has been removed on the partner sub, remove it on Blossom
-                    remove_on_blossom(cfg, b_submission)
-                else:
-                    # Archive it on Blossom
-                    cfg.blossom.archive_submission(submission_id=b_submission["id"])
 
 
 def get_human_transcription(cfg: Config, submission: Dict) -> Dict:
