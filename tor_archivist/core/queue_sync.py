@@ -55,6 +55,40 @@ def _auto_report_handling(cfg: Config, r_submission: Any, b_submission: Dict, re
     """
     try:
         partner_submission = cfg.reddit.submission(url=r_submission.url)
+
+        # Check if the post is marked as NSFW on the partner sub
+        if partner_submission.over_18:
+            if not r_submission.over_18:
+                nsfw_on_reddit(r_submission)
+            if not b_submission["nsfw"]:
+                nsfw_on_blossom(cfg, b_submission)
+
+        # Check if the post has been removed on the partner sub
+        if partner_submission.removed_by_category:
+            # Removed on the partner sub, it's safe to remove
+            # But only do it if the submission is not marked as removed already
+            if not r_submission.removed_by_category:
+                remove_on_reddit(r_submission)
+            if not b_submission["removed_from_queue"]:
+                remove_on_blossom(cfg, b_submission)
+            # We can ignore the report
+            return True
+
+        # Check if the post has been removed by a mod
+        if r_submission.removed_by_category:
+            if not b_submission["removed_from_reddit"]:
+                remove_on_blossom(cfg, b_submission)
+            # We can ignore the report
+            return True
+
+        if reason == NSFW_POST_REPORT_REASON:
+            # We already handled NSFW reports
+            # We still need to approve the submission to remove the item from mod queue
+            approve_on_reddit(r_submission)
+            approve_on_blossom(cfg, b_submission)
+            return True
+
+        return False
     except Forbidden:
         # The subreddit is private, remove the post from the queue
         logging.warning(f"Removing submission from private sub: {b_submission['tor_url']}")
@@ -63,40 +97,6 @@ def _auto_report_handling(cfg: Config, r_submission: Any, b_submission: Dict, re
         if not b_submission["removed_from_queue"]:
             remove_on_blossom(cfg, b_submission)
         return True
-
-    # Check if the post is marked as NSFW on the partner sub
-    if partner_submission.over_18:
-        if not r_submission.over_18:
-            nsfw_on_reddit(r_submission)
-        if not b_submission["nsfw"]:
-            nsfw_on_blossom(cfg, b_submission)
-
-    # Check if the post has been removed on the partner sub
-    if partner_submission.removed_by_category:
-        # Removed on the partner sub, it's safe to remove
-        # But only do it if the submission is not marked as removed already
-        if not r_submission.removed_by_category:
-            remove_on_reddit(r_submission)
-        if not b_submission["removed_from_queue"]:
-            remove_on_blossom(cfg, b_submission)
-        # We can ignore the report
-        return True
-
-    # Check if the post has been removed by a mod
-    if r_submission.removed_by_category:
-        if not b_submission["removed_from_reddit"]:
-            remove_on_blossom(cfg, b_submission)
-        # We can ignore the report
-        return True
-
-    if reason == NSFW_POST_REPORT_REASON:
-        # We already handled NSFW reports
-        # We still need to approve the submission to remove the item from mod queue
-        approve_on_reddit(r_submission)
-        approve_on_blossom(cfg, b_submission)
-        return True
-
-    return False
 
 
 def track_post_removal(cfg: Config) -> None:
