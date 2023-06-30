@@ -51,9 +51,11 @@ def _auto_report_handling(cfg: Config, r_submission: Any, b_submission: Dict, re
     partner_submission = cfg.reddit.submission(url=r_submission.url)
 
     # Check if the post is marked as NSFW on the partner sub
-    if not r_submission.over_18 and partner_submission.over_18:
-        nsfw_on_reddit(r_submission)
-        nsfw_on_blossom(cfg, b_submission)
+    if partner_submission.over_18:
+        if not r_submission.over_18:
+            nsfw_on_reddit(r_submission)
+        if not b_submission["nsfw"]:
+            nsfw_on_blossom(cfg, b_submission)
 
     # Check if the post has been removed on the partner sub
     if partner_submission.removed_by_category:
@@ -61,6 +63,14 @@ def _auto_report_handling(cfg: Config, r_submission: Any, b_submission: Dict, re
         # But only do it if the submission is not marked as removed already
         if not r_submission.removed_by_category:
             remove_on_reddit(r_submission)
+        if not b_submission["removed_from_queue"]:
+            remove_on_blossom(cfg, b_submission)
+        # We can ignore the report
+        return True
+
+    # Check if the post has been removed by a mod
+    if r_submission.removed_by_category:
+        if not b_submission["removed_from_reddit"]:
             remove_on_blossom(cfg, b_submission)
         # We can ignore the report
         return True
