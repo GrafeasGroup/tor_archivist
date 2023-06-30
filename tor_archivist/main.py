@@ -9,6 +9,7 @@ import click
 from blossom_wrapper import BlossomStatus
 from click.core import Context
 from dotenv import load_dotenv
+from prawcore import Forbidden
 from shiv.bootstrap import current_zipfile
 
 from tor_archivist import (
@@ -32,7 +33,7 @@ from tor_archivist.core.queue_sync import (
     track_post_removal,
     track_post_reports,
 )
-from tor_archivist.core.reddit import nsfw_on_reddit
+from tor_archivist.core.reddit import nsfw_on_reddit, remove_on_reddit
 
 with current_zipfile() as archive:
     if archive:
@@ -77,7 +78,18 @@ def process_expired_posts(cfg: Config) -> None:
                 )
                 # The post was not archived, but has been removed from ToR already
                 # We need to update the Blossom object to remove this post from the endpoint
-                partner_submission = cfg.reddit.submission(url=r_submission.url)
+                try:
+                    partner_submission = cfg.reddit.submission(url=r_submission.url)
+                except Forbidden:
+                    # The sub is private, remove the submission from the queue
+                    logging.warning(
+                        f"Removing submission from private sub: {b_submission['tor_url']}"
+                    )
+                    if not r_submission.removed_by_category:
+                        remove_on_reddit(r_submission)
+                    if not b_submission["removed_from_queue"]:
+                        remove_on_blossom(cfg, b_submission)
+                    return
 
                 # Update NSFW status just to be safe
                 if not r_submission.over_18 and partner_submission.over_18:

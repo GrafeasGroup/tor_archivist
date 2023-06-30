@@ -4,6 +4,8 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
+from prawcore import Forbidden
+
 from tor_archivist.core.blossom import (
     approve_on_blossom,
     get_blossom_submission,
@@ -51,7 +53,16 @@ def _auto_report_handling(cfg: Config, r_submission: Any, b_submission: Dict, re
 
     :returns: True if the report has been handled automatically, else False.
     """
-    partner_submission = cfg.reddit.submission(url=r_submission.url)
+    try:
+        partner_submission = cfg.reddit.submission(url=r_submission.url)
+    except Forbidden:
+        # The subreddit is private, remove the post from the queue
+        logging.warning(f"Removing submission from private sub: {b_submission['tor_url']}")
+        if not r_submission.removed_by_category:
+            remove_on_reddit(r_submission)
+        if not b_submission["removed_from_queue"]:
+            remove_on_blossom(cfg, b_submission)
+        return True
 
     # Check if the post is marked as NSFW on the partner sub
     if partner_submission.over_18:
