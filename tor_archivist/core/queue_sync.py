@@ -76,7 +76,7 @@ def _auto_report_handling(cfg: Config, r_submission: Any, b_submission: Dict, re
 
         # Check if the post has been removed by a mod
         if r_submission.removed_by_category:
-            if not b_submission["removed_from_reddit"]:
+            if not b_submission["removed_from_queue"]:
                 remove_on_blossom(cfg, b_submission)
             # We can ignore the report
             return True

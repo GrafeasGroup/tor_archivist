@@ -58,7 +58,7 @@ def explode_gracefully(error: RuntimeError) -> None:
     :param tor: the r/ToR helper object
     :return: Nothing. Everything dies here.
     """
-    logging.critical(error)
+    logging.exception(error, exc_info=True)
     sys.exit(1)
 
 
