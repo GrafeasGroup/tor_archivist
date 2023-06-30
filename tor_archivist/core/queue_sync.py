@@ -1,5 +1,7 @@
 """Functionality to sync the Blossom queue with the queue on Reddit."""
 import logging
+import time
+from datetime import timedelta, datetime, timezone
 from typing import Any, Dict, Optional
 
 from tor_archivist.core.blossom import (
@@ -20,6 +22,7 @@ from tor_archivist.core.reddit import (
 
 NSFW_POST_REPORT_REASON = "Post should be marked as NSFW"
 BOT_USERNAMES = ["tor_archivist", "blossom", "tor_tester"]
+QUEUE_TIMEOUT = timedelta(hours=18)
 
 
 def _get_report_reason(r_submission: Any) -> Optional[str]:
@@ -142,3 +145,41 @@ def track_post_reports(cfg: Config) -> None:
             continue
 
         report_on_blossom(cfg, b_submission, reason)
+
+
+def full_blossom_queue_sync(cfg: Config) -> None:
+    """Make sure all posts in Blossom's queue still exist in Reddit."""
+    queue_start = datetime.now(tz=timezone.utc) - QUEUE_TIMEOUT
+
+    size = 500
+    page = 1
+
+    # Fetch all unclaimed posts from the queue
+    while True:
+        queue_response = cfg.blossom.get(
+            "submission/",
+            params={
+                "page_size": size,
+                "page": page,
+                "claimed_by__isnull": True,
+                "removed_from_queue": False,
+                "create_time__gte": queue_start.isoformat(),
+            },
+        )
+        if not queue_response.ok:
+            logging.error(f"Failed to get queue from Blossom:\n{queue_response}")
+            return
+
+        data = queue_response.json()["results"]
+        page += 1
+
+        # Sync up the queue submissions
+        for b_submission in data:
+            logging.info(f"Syncing up Blossom queue for {b_submission['tor_url']}")
+            r_submission = cfg.reddit.submission(url=b_submission["tor_url"])
+            _auto_report_handling(cfg, r_submission, b_submission, "")
+            time.sleep(1)
+
+        if len(data) < size or queue_response.json()["next"] is None:
+            break
+
