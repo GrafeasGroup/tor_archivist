@@ -1,7 +1,7 @@
 """Functionality to sync the Blossom queue with the queue on Reddit."""
 import logging
 import time
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from tor_archivist.core.blossom import (
@@ -182,4 +182,3 @@ def full_blossom_queue_sync(cfg: Config) -> None:
 
         if len(data) < size or queue_response.json()["next"] is None:
             break
-

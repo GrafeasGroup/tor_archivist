@@ -27,7 +27,11 @@ from tor_archivist.core.blossom import nsfw_on_blossom, remove_on_blossom
 from tor_archivist.core.config import Config, config
 from tor_archivist.core.helpers import get_id_from_url, run_until_dead
 from tor_archivist.core.initialize import build_bot
-from tor_archivist.core.queue_sync import track_post_removal, track_post_reports, full_blossom_queue_sync
+from tor_archivist.core.queue_sync import (
+    full_blossom_queue_sync,
+    track_post_removal,
+    track_post_reports,
+)
 from tor_archivist.core.reddit import nsfw_on_reddit
 
 with current_zipfile() as archive:

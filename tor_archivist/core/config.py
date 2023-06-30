@@ -45,14 +45,16 @@ class cached_property(object):
     # as expected because the lookup logic is replicated in __get__ for
     # manual invocation.
 
-    def __init__(self, func: Callable, name: Optional[str]=None, doc: Optional[str]=None) -> None:
+    def __init__(
+        self, func: Callable, name: Optional[str] = None, doc: Optional[str] = None
+    ) -> None:
         """Create a new cachable property."""
         self.__name__ = name or func.__name__
         self.__module__ = func.__module__
         self.__doc__ = doc or func.__doc__
         self.func = func
 
-    def __get__(self, obj: Any, _type: Any=None) -> Any:
+    def __get__(self, obj: Any, _type: Any = None) -> Any:
         if obj is None:
             return self
         value = obj.__dict__.get(self.__name__, _missing)
